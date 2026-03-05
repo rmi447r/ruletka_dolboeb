@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Stream Auction - Голосование</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            background: #0d0d0d; 
+            color: #fff; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-top: 50px;
+        }
+
+        #timerDisplay {
+            font-size: 80px;
+            font-weight: 800;
+            color: #00a2ff;
+            text-shadow: 0 0 20px rgba(0, 162, 255, 0.5);
+            margin-bottom: 30px;
+            font-family: monospace;
+        }
+
+        .container { width: 90%; max-width: 600px; }
+
+        .input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 30px; 
+        }
+
+        input { 
+            flex-grow: 1; 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 10px; 
+        }
+
+        .btn-add { 
+            background: #00a2ff; 
+            border: none; 
+            color: #fff; 
+            padding: 0 25px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 24px;
+        }
+
+        .lot-item { 
+            background: #141414; 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #222;
+        }
+
+        .lot-info { display: flex; flex-direction: column; }
+        .lot-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .lot-votes { color: #00a2ff; font-size: 14px; }
+
+        .btn-vote { 
+            background: #222; 
+            border: 1px solid #444; 
+            color: #fff; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s;
+        }
+
+        .btn-vote:hover { background: #00a2ff; border-color: #00a2ff; }
+    </style>
+</head>
+<body>
+
+    <div id="timerDisplay">10:00:00</div>
+
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="newLotName" placeholder="Запропонувати свій варіант...">
+            <button class="btn-add" onclick="suggestLot()">+</button>
+        </div>
+
+        <div id="lotsContainer">
+            </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
+            databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 1. Таймер
+        db.ref('auction/timer').on('value', snap => {
+            const totalSec = snap.val() || 0;
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            const displayTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}:00`;
+            document.getElementById('timerDisplay').innerText = displayTime;
+        });
+
+        // 2. Лоты
+        db.ref('lots').on('value', snap => {
+            const container = document.getElementById('lotsContainer');
+            container.innerHTML = '';
+            const data = snap.val();
+            if (!data) return;
+
+            Object.keys(data).forEach(key => {
+                const lot = data[key];
+                if (lot.active === false) return;
+
+                const div = document.createElement('div');
+                div.className = 'lot-item';
+                div.innerHTML = `
+                    <div class="lot-info">
+                        <span class="lot-name">${lot.name}</span>
+                        <span class="lot-votes">${lot.votes || 0} голосов</span>
+                    </div>
+                    <button class="btn-vote" onclick="vote('${key}')">+1</button>
+                `;
+                container.appendChild(div);
+            });
+        });
+
+        function vote(id) {
+            db.ref('lots/' + id + '/votes').transaction(current => (current || 0) + 1);
+        }
+
+        function suggestLot() {
+            const name = document.getElementById('newLotName').value;
+            if (!name) return;
+            const id = Date.now();
+            db.ref('lots/' + id).set({
+                id: id,
+                name: name,
+                votes: 1,
+                active: true
+            });
+            document.getElementById('newLotName').value = '';
+        }
+    </script>
+</body>
+</html>
