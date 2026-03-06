@@ -20,7 +20,8 @@
         .lot-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
         .lot-votes { color: #00a2ff; font-size: 14px; }
         .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; flex-shrink: 0; }
-        .btn-vote:active { background: #00a2ff; transform: scale(0.95); }
+        .btn-vote:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; }
+        .btn-vote:active:not(:disabled) { background: #00a2ff; transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -43,6 +44,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // 1. Таймер
         db.ref('auction/timer').on('value', snap => {
             const t = snap.val() || 0;
             const m = Math.floor(t / 60);
@@ -50,6 +52,7 @@
             document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
         });
 
+        // 2. Лоты
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
@@ -62,6 +65,9 @@
                 .sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
             sortedLots.forEach(lot => {
+                // Проверяем, голосовал ли уже этот браузер
+                const hasVoted = localStorage.getItem('voted_' + lot.id);
+
                 const div = document.createElement('div');
                 div.className = 'lot-item';
                 div.innerHTML = `
@@ -69,24 +75,32 @@
                         <span class="lot-name">${lot.name}</span>
                         <span class="lot-votes">${lot.votes || 0} голосов</span>
                     </div>
-                    <button class="btn-vote" onclick="vote('${lot.id}')">+1</button>
+                    <button class="btn-vote" ${hasVoted ? 'disabled' : ''} onclick="vote('${lot.id}')">
+                        ${hasVoted ? '✓' : '+1'}
+                    </button>
                 `;
                 container.appendChild(div);
             });
         });
 
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ГОЛОСОВАНИЯ
         function vote(id) {
+            // Проверка защиты в коде
+            if (localStorage.getItem('voted_' + id)) return;
+
             db.ref('lots/' + id).transaction(lot => {
                 if (lot) {
                     lot.votes = (lot.votes || 0) + 1;
-                    lot.val = (lot.val || 0) + 1; // Добавляем val для синхрона с ПК
+                    lot.val = (lot.val || 0) + 1;
                 }
                 return lot;
+            }, (error, committed) => {
+                if (committed) {
+                    // Сохраняем пометку локально
+                    localStorage.setItem('voted_' + id, 'true');
+                }
             });
         }
 
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ
         function suggestLot() {
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
@@ -96,9 +110,12 @@
                 id: id, 
                 name: name, 
                 votes: 1, 
-                val: 1, // Добавляем val для синхрона с ПК
-                hue: Math.random() * 360, // Чтобы в рулетке был цвет
+                val: 1, 
+                hue: Math.random() * 360, 
                 active: true 
+            }).then(() => {
+                // Тот кто создал лот, автоматически считается проголосовавшим
+                localStorage.setItem('voted_' + id, 'true');
             });
             input.value = '';
         }
