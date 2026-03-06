@@ -9,38 +9,23 @@
     <style>
         :root { --bg: #0a0a0a; --panel: #111; --accent: #00a2ff; --red: #ff4b4b; --sidebar-w: 60px; }
         body { margin: 0; background: var(--bg); color: #efefef; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; background-size: cover; background-position: center; }
-
-        /* САЙДБАР */
         .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #1a1a1a; z-index: 100; }
         .nav-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 10px; cursor: pointer; color: #444; transition: 0.3s; background: none; border: none; }
         .nav-btn.active { color: var(--accent); background: rgba(0, 162, 255, 0.1); }
-
         .app-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
         .view-section { display: none; width: 100%; height: 100%; }
         .view-section.active { display: flex; }
-
-        /* ЛЕВАЯ ПАНЕЛЬ */
         .lots-panel { width: 320px; background: rgba(10,10,10,0.95); padding: 20px; border-right: 1px solid #1a1a1a; transition: transform 0.4s ease; position: relative; display: flex; flex-direction: column; z-index: 50; }
         .lots-panel.collapsed { transform: translateX(-320px); }
-        
-        /* КНОПКА-СТРЕЛКА */
         .toggle-trigger { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); background: #1a1a1a; color: var(--accent); width: 30px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 0 8px 8px 0; border: 1px solid #333; z-index: 60; }
-
         .lot-item { display: flex; align-items: center; padding: 10px; background: #161616; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 13px; }
         .lot-item.out { opacity: 0.2; text-decoration: line-through; filter: grayscale(1); }
-
-        /* КОЛЕСО И ИНФО */
         .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
-        
         .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
         .center-logo-box { position: absolute; width: 80px; height: 80px; background: #000; border-radius: 50%; border: 3px solid #222; z-index: 10; display: none; overflow: hidden; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
-        /* УПРАВЛЕНИЕ */
         .control-panel { width: 280px; background: rgba(14,14,14,0.9); padding: 15px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; }
         .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
-
-        /* АУКЦИОН */
         .auc-container { display: grid; grid-template-columns: 300px 1fr 300px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
         .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; position: absolute; bottom: 0; }
     </style>
@@ -100,7 +85,7 @@
                 <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
                     <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
                         <input type="text" id="aName" placeholder="Лот..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
-                        <input type="number" id="aVal" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:8px;">
+                        <input type="number" id="aVal" value="1" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:8px;">
                         <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px;">+</button>
                     </div>
                     <div id="aucList" style="flex:1; overflow-y:auto;"></div>
@@ -131,7 +116,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ТВОЙ ПАРОЛЬ
         const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
 
         let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'new';
@@ -159,29 +143,34 @@
 
         function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
-        db.ref('lots').on('value', s => { data = s.val() ? Object.entries(s.val()) : []; renderAll(); });
+        db.ref('lots').on('value', s => { 
+            const val = s.val();
+            data = val ? Object.entries(val) : []; 
+            renderAll(); 
+        });
 
         function renderAll() {
             const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
             wl.innerHTML = ''; al.innerHTML = '';
             const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + d.val, 0);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
 
             data.forEach(([id, d], i) => {
                 const isOut = d.active === false;
-                const p = total > 0 ? ((d.val/total)*100).toFixed(1) : 0;
+                const currentVotes = d.votes || d.val || 0;
+                const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
                 if(!(isOut && hide)) {
                     wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
                         ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
-                        <b>${d.val}</b>
+                        <b>${currentVotes}</b>
                     </div>`;
                 }
                 al.innerHTML += `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #1a1a1a;">
                     <span style="width:30px; color:#333;">${i+1}</span>
                     <span style="flex:1;">${d.name}</span>
                     <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                    <span style="margin-right:15px;">${d.val} <i class="fas fa-user-circle"></i></span>
+                    <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle"></i></span>
                     <i class="fas fa-trash" style="cursor:pointer; color:#222;" onclick="db.ref('lots/${id}').remove()"></i>
                 </div>`;
             });
@@ -193,10 +182,11 @@
             ctx.clearRect(0,0,550,550);
             const active = data.filter(([id,d]) => d.active !== false);
             if(!active.length) return;
-            const total = active.reduce((a,[id,d]) => a + d.val, 0);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
-                const slice = (d.val/total) * (Math.PI*2);
+                const currentVotes = d.votes || d.val || 0;
+                const slice = (currentVotes/total) * (Math.PI*2);
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
                 if(wType === 'class') {
@@ -238,12 +228,13 @@
 
         function getWin() {
             const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + d.val, 0);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             const norm = ((rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
             const target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
             let cur = 0;
             for(const [id, d] of active) {
-                const slice = (d.val/total) * (Math.PI*2);
+                const currentVotes = d.votes || d.val || 0;
+                const slice = (currentVotes/total) * (Math.PI*2);
                 if(target >= cur && target < cur + slice) return {id, name: d.name};
                 cur += slice;
             }
@@ -252,7 +243,8 @@
         function updateStatus(name, isFinal) {
             const st = document.getElementById('simpleStatus');
             if(isFinal) {
-                const winner = data.filter(([id,d]) => d.active !== false && d.name !== name)[0][1].name;
+                const winnerObj = data.filter(([id,d]) => d.active !== false && d.name !== name)[0];
+                const winner = winnerObj ? winnerObj[1].name : name;
                 st.style.color = "var(--accent)";
                 st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + winner;
             } else {
@@ -262,7 +254,6 @@
             setTimeout(() => { st.innerText = ''; }, 4000);
         }
 
-        // ОБНОВЛЕНИЕ ТАЙМЕРА С ПАРОЛЕМ
         function tUpdate() { 
             const m=Math.floor(tSec/60), s=tSec%60; 
             document.getElementById('tDisp').innerText=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`; 
@@ -279,8 +270,18 @@
         function tReset() { tSec=600; tUpdate(); }
         
         function addLot() { 
-            const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||0; 
-            if(n) db.ref('lots').push({ name: n, val: v, hue: Math.random()*360, active: true }); 
+            const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||1; 
+            if(n) {
+                const id = Date.now();
+                db.ref('lots/' + id).set({ 
+                    id: id,
+                    name: n, 
+                    votes: v, 
+                    val: v,
+                    hue: Math.random()*360, 
+                    active: true 
+                }); 
+            }
             document.getElementById('aName').value = '';
         }
 
