@@ -7,68 +7,19 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            background: #0d0d0d; 
-            color: #fff; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px 10px;
-        }
-
-        #timerDisplay {
-            font-size: 18vw; 
-            font-weight: 800;
-            color: #00a2ff;
-            text-shadow: 0 0 20px rgba(0, 162, 255, 0.5);
-            margin-bottom: 20px;
-            font-family: monospace;
-        }
-
+        body { margin: 0; background: #0d0d0d; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
+        #timerDisplay { font-size: 18vw; font-weight: 800; color: #00a2ff; text-shadow: 0 0 20px rgba(0, 162, 255, 0.5); margin-bottom: 20px; font-family: monospace; }
         @media (min-width: 600px) { #timerDisplay { font-size: 80px; } }
-
         .container { width: 100%; max-width: 600px; }
-
         .input-group { display: flex; gap: 10px; margin-bottom: 30px; }
-
-        input { 
-            flex-grow: 1; 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
-            color: #fff; 
-            padding: 15px; 
-            border-radius: 12px; 
-            font-size: 16px;
-        }
-
-        .btn-add { 
-            background: #00a2ff; border: none; color: #fff; 
-            padding: 0 20px; border-radius: 12px; 
-            cursor: pointer; font-weight: bold; font-size: 24px;
-        }
-
-        .lot-item { 
-            background: #141414; border-radius: 15px; padding: 15px; 
-            margin-bottom: 12px; display: flex; 
-            justify-content: space-between; align-items: center; 
-            border: 1px solid #222;
-            animation: fadeIn 0.3s ease;
-        }
-
+        input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 16px; }
+        .btn-add { background: #00a2ff; border: none; color: #fff; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 24px; }
+        .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .lot-info { display: flex; flex-direction: column; overflow: hidden; }
         .lot-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
         .lot-votes { color: #00a2ff; font-size: 14px; }
-
-        .btn-vote { 
-            background: #222; border: 1px solid #444; color: #fff; 
-            padding: 12px 20px; border-radius: 10px; 
-            cursor: pointer; font-weight: bold; font-size: 16px;
-            flex-shrink: 0;
-        }
+        .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; flex-shrink: 0; }
         .btn-vote:active { background: #00a2ff; transform: scale(0.95); }
     </style>
 </head>
@@ -92,7 +43,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. Таймер
         db.ref('auction/timer').on('value', snap => {
             const t = snap.val() || 0;
             const m = Math.floor(t / 60);
@@ -100,14 +50,12 @@
             document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
         });
 
-        // 2. Лоты с авто-сортировкой
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
             const data = snap.val();
             if (!data) return;
 
-            // Превращаем объект в массив и сортируем по голосам (от большего к меньшему)
             const sortedLots = Object.keys(data)
                 .map(key => ({ id: key, ...data[key] }))
                 .filter(lot => lot.active !== false)
@@ -127,16 +75,31 @@
             });
         });
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ГОЛОСОВАНИЯ
         function vote(id) {
-            db.ref('lots/' + id + '/votes').transaction(curr => (curr || 0) + 1);
+            db.ref('lots/' + id).transaction(lot => {
+                if (lot) {
+                    lot.votes = (lot.votes || 0) + 1;
+                    lot.val = (lot.val || 0) + 1; // Добавляем val для синхрона с ПК
+                }
+                return lot;
+            });
         }
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ
         function suggestLot() {
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
             if (!name) return;
             const id = Date.now();
-            db.ref('lots/' + id).set({ id: id, name: name, votes: 1, active: true });
+            db.ref('lots/' + id).set({ 
+                id: id, 
+                name: name, 
+                votes: 1, 
+                val: 1, // Добавляем val для синхрона с ПК
+                hue: Math.random() * 360, // Чтобы в рулетке был цвет
+                active: true 
+            });
             input.value = '';
         }
     </script>
