@@ -13,7 +13,9 @@
         .container { width: 100%; max-width: 600px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 30px; }
         input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 16px; }
+        input:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-add { background: #00a2ff; border: none; color: #fff; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 24px; }
+        .btn-add:disabled { background: #333; cursor: not-allowed; }
         .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .lot-info { display: flex; flex-direction: column; overflow: hidden; }
@@ -22,16 +24,18 @@
         .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; flex-shrink: 0; }
         .btn-vote:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; }
         .btn-vote:active:not(:disabled) { background: #00a2ff; transform: scale(0.95); }
+        .status-msg { color: #00a2ff; margin-bottom: 15px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
     <div id="timerDisplay">10:00:00</div>
+    <div id="statusMessage" class="status-msg">Ви вже прийняли участь в аукціоні ✓</div>
 
     <div class="container">
-        <div class="input-group">
+        <div class="input-group" id="inputSection">
             <input type="text" id="newLotName" placeholder="Запропонувати свій варіант...">
-            <button class="btn-add" onclick="suggestLot()">+</button>
+            <button class="btn-add" id="btnAddLot" onclick="suggestLot()">+</button>
         </div>
         <div id="lotsContainer"></div>
     </div>
@@ -44,7 +48,18 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. Таймер
+        // Проверка: делал ли юзер вообще хоть что-то
+        function checkGlobalLock() {
+            const hasParticipated = localStorage.getItem('auction_participated');
+            if (hasParticipated) {
+                document.getElementById('newLotName').disabled = true;
+                document.getElementById('btnAddLot').disabled = true;
+                document.getElementById('statusMessage').style.display = 'block';
+                return true;
+            }
+            return false;
+        }
+
         db.ref('auction/timer').on('value', snap => {
             const t = snap.val() || 0;
             const m = Math.floor(t / 60);
@@ -52,12 +67,13 @@
             document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
         });
 
-        // 2. Лоты
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
             const data = snap.val();
             if (!data) return;
+
+            const isLocked = checkGlobalLock();
 
             const sortedLots = Object.keys(data)
                 .map(key => ({ id: key, ...data[key] }))
@@ -65,9 +81,6 @@
                 .sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
             sortedLots.forEach(lot => {
-                // Проверяем, голосовал ли уже этот браузер
-                const hasVoted = localStorage.getItem('voted_' + lot.id);
-
                 const div = document.createElement('div');
                 div.className = 'lot-item';
                 div.innerHTML = `
@@ -75,8 +88,8 @@
                         <span class="lot-name">${lot.name}</span>
                         <span class="lot-votes">${lot.votes || 0} голосов</span>
                     </div>
-                    <button class="btn-vote" ${hasVoted ? 'disabled' : ''} onclick="vote('${lot.id}')">
-                        ${hasVoted ? '✓' : '+1'}
+                    <button class="btn-vote" ${isLocked ? 'disabled' : ''} onclick="vote('${lot.id}')">
+                        ${isLocked ? '✓' : '+1'}
                     </button>
                 `;
                 container.appendChild(div);
@@ -84,8 +97,7 @@
         });
 
         function vote(id) {
-            // Проверка защиты в коде
-            if (localStorage.getItem('voted_' + id)) return;
+            if (localStorage.getItem('auction_participated')) return;
 
             db.ref('lots/' + id).transaction(lot => {
                 if (lot) {
@@ -95,30 +107,30 @@
                 return lot;
             }, (error, committed) => {
                 if (committed) {
-                    // Сохраняем пометку локально
-                    localStorage.setItem('voted_' + id, 'true');
+                    localStorage.setItem('auction_participated', 'true');
+                    checkGlobalLock();
                 }
             });
         }
 
         function suggestLot() {
+            if (localStorage.getItem('auction_participated')) return;
+
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
             if (!name) return;
             const id = Date.now();
+            
             db.ref('lots/' + id).set({ 
-                id: id, 
-                name: name, 
-                votes: 1, 
-                val: 1, 
-                hue: Math.random() * 360, 
-                active: true 
+                id: id, name: name, votes: 1, val: 1, hue: Math.random() * 360, active: true 
             }).then(() => {
-                // Тот кто создал лот, автоматически считается проголосовавшим
-                localStorage.setItem('voted_' + id, 'true');
+                localStorage.setItem('auction_participated', 'true');
+                input.value = '';
+                checkGlobalLock();
             });
-            input.value = '';
         }
+        
+        checkGlobalLock();
     </script>
 </body>
 </html>
