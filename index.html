@@ -48,7 +48,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. Функция блокировки интерфейса
+        // 1. Мгновенная проверка и блокировка интерфейса
         function checkGlobalLock() {
             const hasParticipated = localStorage.getItem('auction_participated');
             if (hasParticipated) {
@@ -60,7 +60,7 @@
             return false;
         }
 
-        // 2. Таймер
+        // 2. Таймер (синхрон с админкой)
         db.ref('auction/timer').on('value', snap => {
             const t = snap.val() || 0;
             const m = Math.floor(t / 60);
@@ -68,7 +68,7 @@
             document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
         });
 
-        // 3. Отрисовка лотов
+        // 3. Обновление списка лотов
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
@@ -98,9 +98,13 @@
             });
         });
 
-        // 4. Голосование
+        // 4. Голосование с мгновенной защитой
         function vote(id) {
             if (localStorage.getItem('auction_participated')) return;
+
+            // Блокируем СРАЗУ, до отправки в базу
+            localStorage.setItem('auction_participated', 'true');
+            checkGlobalLock();
 
             db.ref('lots/' + id).transaction(lot => {
                 if (lot) {
@@ -108,23 +112,22 @@
                     lot.val = (lot.val || 0) + 1;
                 }
                 return lot;
-            }, (error, committed) => {
-                if (committed) {
-                    localStorage.setItem('auction_participated', 'true');
-                    checkGlobalLock();
-                }
             });
         }
 
-        // 5. Предложение лота
+        // 5. Предложение лота с мгновенной защитой
         function suggestLot() {
             if (localStorage.getItem('auction_participated')) return;
 
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
             if (!name) return;
+
+            // Блокируем СРАЗУ, чтобы не успели нажать второй раз
+            localStorage.setItem('auction_participated', 'true');
+            checkGlobalLock();
+
             const id = Date.now();
-            
             db.ref('lots/' + id).set({ 
                 id: id, 
                 name: name, 
@@ -133,13 +136,11 @@
                 hue: Math.random() * 360, 
                 active: true 
             }).then(() => {
-                localStorage.setItem('auction_participated', 'true');
                 input.value = '';
-                checkGlobalLock();
             });
         }
         
-        // Первичная проверка при загрузке страницы
+        // Проверка при загрузке
         checkGlobalLock();
     </script>
 </body>
