@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - Final Pro Edition</title>
+    <title>Stream Auction - Admin Panel PRO</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -23,24 +23,20 @@
         .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
         .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
-        
-        .center-logo-box { 
-            position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; 
-            border: 3px solid #222; z-index: 40; display: none; overflow: hidden; 
-            top: 50%; left: 50%; transform: translate(-50%, -10%);
-            justify-content: center; align-items: center; 
-        }
+        .center-logo-box { position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; border: 3px solid #222; z-index: 40; display: none; overflow: hidden; top: 50%; left: 50%; transform: translate(-50%, -10%); justify-content: center; align-items: center; }
         .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
-
         .control-panel { width: 280px; background: rgba(14,14,14,0.9); padding: 15px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; }
         .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
         .auc-container { display: grid; grid-template-columns: 300px 1fr 340px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
         .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; width: 100%; position: absolute; bottom: 0; box-sizing: border-box; }
-        
         .timer-input-group { display: flex; gap: 5px; margin-bottom: 10px; }
         .timer-input-group input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 5px; text-align: center; border-radius: 4px; }
         
-        .voters-list { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
+        /* Стиль для списка онлайна */
+        #onlineListOverlay { display: none; position: fixed; bottom: 70px; right: 20px; background: #111; border: 1px solid var(--accent); border-radius: 8px; padding: 15px; width: 250px; max-height: 300px; overflow-y: auto; z-index: 200; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .online-user-item { font-size: 12px; padding: 5px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .ban-btn { color: #ff4b4b; cursor: pointer; margin-left: 10px; font-size: 14px; transition: 0.2s; }
+        .ban-btn:hover { transform: scale(1.2); }
     </style>
 </head>
 <body id="mainBody">
@@ -48,11 +44,15 @@
     <aside class="sidebar">
         <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-home"></i></button>
         <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-envelope"></i></button>
-        <button class="nav-btn" onclick="setView('vip', this)"><i class="fas fa-user-tie"></i></button>
         <button class="nav-btn" style="margin-top: auto; margin-bottom: 20px;"><i class="fas fa-cog"></i></button>
     </aside>
 
     <main class="app-content">
+        <div id="onlineListOverlay">
+            <div style="font-size: 10px; color: var(--accent); margin-bottom: 10px; font-weight: bold;">СЕЙЧАС ОНЛАЙН</div>
+            <div id="onlineListContent"></div>
+        </div>
+
         <section id="view-wheel" class="view-section active">
             <div class="lots-panel" id="sidePanel">
                 <div class="toggle-trigger" onclick="toggleSide()"><i class="fas fa-chevron-left" id="sideIcon"></i></div>
@@ -134,7 +134,7 @@
                     <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
                 </div>
 
-                <div id="onlineCounter" onclick="showOnlineList()" style="cursor:pointer; background:rgba(0,162,255,0.1); padding:5px 15px; border-radius:20px; border:1px solid var(--accent);">
+                <div id="onlineCounter" onclick="toggleOnlineList()" style="cursor:pointer; background:rgba(0,162,255,0.1); padding:5px 15px; border-radius:20px; border:1px solid var(--accent);">
                     <i class="fas fa-users" style="color:var(--accent);"></i> <span id="onlineCount">0</span>
                 </div>
             </div>
@@ -175,7 +175,6 @@
             renderAll(); 
         });
 
-        // Загрузка правил
         db.ref('auction/rules').once('value', s => {
             if(s.val()) document.getElementById('rulesArea').innerText = s.val();
         });
@@ -183,13 +182,30 @@
         // Онлайн зрители
         db.ref('presence').on('value', s => {
             onlineUsers = s.val() || {};
-            const count = Object.keys(onlineUsers).length;
-            document.getElementById('onlineCount').innerText = count;
+            const userList = Object.entries(onlineUsers);
+            document.getElementById('onlineCount').innerText = userList.length;
+            
+            const content = document.getElementById('onlineListContent');
+            content.innerHTML = userList.map(([id, u]) => `
+                <div class="online-user-item">
+                    <span>${u.name || 'Аноним'}</span>
+                    <i class="fas fa-user-slash ban-btn" title="Забанить" onclick="banUser('${u.id}', '${u.name}')"></i>
+                </div>
+            `).join('');
         });
 
-        function showOnlineList() {
-            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним').join(', ');
-            alert("Сейчас онлайн: " + (names || "никого"));
+        function toggleOnlineList() {
+            const el = document.getElementById('onlineListOverlay');
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Функция БАНА
+        function banUser(id, name) {
+            if(!id || id === 'undefined') return alert('Не могу забанить анонима без ID');
+            if(confirm(`ЗАБАНИТЬ пользователя ${name}? Он больше не сможет зайти.`)) {
+                db.ref('blacklist/' + id).set({ name: name, date: Date.now() });
+                alert(`${name} отправлен в бан.`);
+            }
         }
 
         function saveRules() {
@@ -213,7 +229,6 @@
                 const currentVotes = d.votes || d.val || 0;
                 const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
                 
-                // Для списка участников (колесо)
                 if(!(isOut && hide)) {
                     wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
@@ -222,7 +237,6 @@
                     </div>`;
                 }
 
-                // Для админ-панели (список)
                 const votersNames = d.voters ? Object.values(d.voters).join(', ') : 'Нет данных';
                 al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a;">
                     <div style="display:flex; align-items:center;">
@@ -230,15 +244,33 @@
                         <span style="flex:1; font-weight:bold;">${d.name}</span>
                         <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
                         <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle" title="${votersNames}" onclick="alert('Голосовали: ${votersNames}')" style="cursor:help;"></i></span>
-                        <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                        <i class="fas fa-user-slash ban-btn" title="Забанить автора" onclick="banUser('${d.authorId}', '${d.author}')"></i>
+                        <i class="fas fa-trash" style="cursor:pointer; color:#444; margin-left:10px;" onclick="safeDeleteLot('${id}')"></i>
                     </div>
-                    <div style="font-size:10px; color:#555; padding-left:30px;">Автор: ${d.author || 'Админ'}</div>
+                    <div style="font-size:10px; color:#555; padding-left:30px;">Автор: ${d.author || 'Админ'} (ID: ${d.authorId || '---'})</div>
                 </div>`;
             });
             drawWheel();
         }
 
-        // --- ТАЙМЕР ---
+        // УДАЛЕНИЕ С ВОЗВРАТОМ ГОЛОСА
+        function safeDeleteLot(id) {
+            if(!confirm("Удалить лот? Те, кто за него голосовал, смогут проголосовать снова.")) return;
+            
+            // Находим всех юзеров, голосовавших за этот лот
+            db.ref('users').once('value', snapshot => {
+                snapshot.forEach(userSnap => {
+                    const userData = userSnap.val();
+                    if(userData.votedFor === id) {
+                        db.ref('users/' + userSnap.key).update({ voted: false, votedFor: null });
+                    }
+                });
+                // Удаляем сам лот
+                db.ref('lots/' + id).remove();
+            });
+        }
+
+        // --- ТАЙМЕР (без изменений) ---
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
@@ -252,15 +284,11 @@
             const h = Math.floor((tSec % 86400) / 3600);
             const m = Math.floor((tSec % 3600) / 60);
             const s = tSec % 60;
-            
             let timeStr = "";
             if(d > 0) timeStr += `${d}д `;
             timeStr += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            
             document.getElementById('tDisp').innerText = timeStr; 
             db.ref('auction').update({ timer: tSec, pass: PASS });
-            
-            // Если включена блокировка и время вышло
             if(tSec <= 0 && document.getElementById('lockVoting').checked) {
                 db.ref('auction/votingClosed').set(true);
             } else {
@@ -277,7 +305,7 @@
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
 
-        // --- ЛОГИКА КОЛЕСА ---
+        // --- КОЛЕСО (без изменений) ---
         function setWType(t) { 
             wType = t;
             document.getElementById('tNew').classList.toggle('active', t==='new');
@@ -304,9 +332,7 @@
                     ctx.strokeStyle = `hsl(${d.hue},70%,50%)`;
                     ctx.lineWidth = 2;
                     ctx.stroke();
-                } else {
-                    ctx.fillStyle = `hsl(${d.hue},65%,45%)`;
-                }
+                } else { ctx.fillStyle = `hsl(${d.hue},65%,45%)`; }
                 ctx.fill();
                 ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
                 let txt = d.name;
@@ -373,7 +399,7 @@
                 db.ref('lots/' + id).set({ 
                     id: id, name: n, votes: v, val: v,
                     hue: Math.random()*360, active: true,
-                    author: 'Admin'
+                    author: 'Admin', authorId: 'admin'
                 }); 
             }
             document.getElementById('aName').value = '';
@@ -382,12 +408,12 @@
         function clearDB() { 
             if(confirm("УДАЛИТЬ ВСЕ?")) {
                 db.ref('lots').remove();
+                db.ref('users').remove(); // Чистим юзеров тоже
                 db.ref('auction').update({ timer: 600, pass: PASS, rules: "" });
             }
         }
 
         function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
-        
         tUpdate();
     </script>
 </body>
