@@ -65,7 +65,7 @@
         .view-section { display: none; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s; }
         .view-section.active { display: flex; opacity: 1; }
 
-        /* ЛОТЫ СЛЕВА */
+        /* ЛОТЫ СЛЕВА (КОЛЕСО) */
         .lots-panel { 
             width: 340px; 
             background: rgba(10,10,10,0.92); 
@@ -95,7 +95,9 @@
             border-radius: 0 10px 10px 0; 
             border: 1px solid #333; 
             z-index: 60; 
+            transition: 0.3s;
         }
+        .toggle-trigger:hover { background: #222; color: #fff; }
 
         .lot-item { 
             display: flex; 
@@ -106,7 +108,10 @@
             margin-bottom: 8px; 
             border-left: 4px solid var(--accent); 
             font-size: 14px; 
+            transition: 0.2s;
         }
+        .lot-item:hover { background: rgba(40,40,40,0.8); }
+        .lot-item.out { opacity: 0.15; text-decoration: line-through; filter: grayscale(1); }
 
         /* КОЛЕСО */
         .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
@@ -117,6 +122,7 @@
             text-transform: uppercase; 
             margin-bottom: 15px; 
             letter-spacing: 2px; 
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         .marker { 
             width: 0; height: 0; 
@@ -125,13 +131,14 @@
             border-top: 40px solid var(--red); 
             z-index: 35; 
             margin-bottom: -10px;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         
         .center-logo-box { 
             position: absolute; width: 90px; height: 90px; background: #000; border-radius: 50%; 
             border: 4px solid #222; z-index: 40; display: none; overflow: hidden; 
             top: 50%; left: 50%; transform: translate(-50%, -10%);
-            justify-content: center; align-items: center; 
+            justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -146,33 +153,17 @@
             gap: 15px; 
         }
         .btn-spin { 
-            background: var(--red); 
+            background: linear-gradient(135deg, var(--red), #b32d2d); 
             border: none; color: #fff; padding: 18px; border-radius: 12px; 
             font-weight: 900; cursor: pointer; font-size: 18px; 
+            box-shadow: 0 5px 15px rgba(255, 75, 75, 0.3);
+            transition: 0.2s;
         }
+        .btn-spin:active { transform: scale(0.96); box-shadow: none; }
 
         /* АУКЦИОН */
         .auc-container { display: grid; grid-template-columns: 320px 1fr 360px; gap: 20px; padding: 25px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
-        .auc-card { background: #111; border-radius: 15px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; }
-        .auc-item-row { display: flex; flex-direction: column; padding: 15px; border-bottom: 1px solid #1a1a1a; transition: 0.2s; }
-
-        /* ИСПРАВЛЕНИЕ №2: СТИЛЬ ОКНА ОНЛАЙНА */
-        #onlinePopupOverlay {
-            display: none;
-            position: fixed;
-            bottom: 75px;
-            right: 25px;
-            width: 260px;
-            max-height: 350px;
-            background: #000;
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 10px 40px #000;
-            z-index: 999;
-            overflow-y: auto;
-        }
-
+        
         .auc-footer { 
             height: 60px; 
             background: #000; 
@@ -187,24 +178,70 @@
             box-sizing: border-box; 
             z-index: 110;
         }
+        
+        .auc-card { background: #111; border-radius: 15px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .auc-item-row { 
+            display: flex; 
+            flex-direction: column; 
+            padding: 15px; 
+            border-bottom: 1px solid #1a1a1a; 
+            background: rgba(255,255,255,0.02); 
+            transition: 0.2s;
+        }
+        .auc-item-row:hover { background: rgba(255,255,255,0.05); }
+
+        /* ИКОНКИ (ТВОИ КРУЖКИ) */
+        .voters-btn { 
+            cursor: pointer; 
+            color: var(--accent); 
+            margin-left: 10px; 
+            font-size: 18px; 
+            transition: 0.3s;
+            opacity: 0.7;
+        }
+        .voters-btn:hover { opacity: 1; transform: scale(1.2); }
+
+        .online-tag { 
+            cursor: pointer; 
+            background: rgba(0, 162, 255, 0.1); 
+            padding: 8px 20px; 
+            border-radius: 30px; 
+            border: 1px solid var(--accent); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            font-weight: bold;
+            color: var(--accent);
+            transition: 0.3s;
+        }
+        .online-tag:hover { background: rgba(0, 162, 255, 0.2); box-shadow: 0 0 15px rgba(0, 162, 255, 0.3); }
+
+        /* БАНЫ */
+        .ban-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #161616; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 10px; 
+            border-left: 4px solid var(--red); 
+        }
+
+        /* ТАЙМЕР */
+        #tDisp { font-size: 56px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.1); margin-bottom: 20px; font-family: 'Courier New', monospace; }
 
         input[type="number"], input[type="text"] {
             background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; outline: none;
         }
+        input:focus { border-color: var(--accent); }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body id="mainBody">
-
-    <!-- ОКНО ОНЛАЙНА -->
-    <div id="onlinePopupOverlay">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС ОНЛАЙН</span>
-            <i class="fas fa-times" onclick="showOnlineList()" style="cursor:pointer; font-size:12px;"></i>
-        </div>
-        <div id="onlineNamesList" style="font-size:13px; color:#ccc; line-height:1.6;"></div>
-    </div>
 
     <aside class="sidebar">
         <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-dharmachakra"></i></button>
@@ -261,13 +298,12 @@
             <div class="auc-container">
                 <div class="auc-card" style="padding: 20px;">
                     <h3 style="margin-top:0"><i class="fas fa-scroll"></i> ПРАВИЛА</h3>
-                    <!-- ПРАВКА №1: ТЕПЕРЬ ПРАВИЛА СОХРАНЯЮТСЯ БЕЗ ЛАГОВ -->
-                    <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none; min-height:100px;" oninput="saveRules()">Напишите правила здесь...</div>
+                    <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none;" oninput="saveRules()">Напишите правила здесь...</div>
                 </div>
 
                 <div class="auc-card">
                     <div style="padding: 20px; background: #161616; display: flex; gap: 10px;">
-                        <input type="text" id="aName" placeholder="Лот..." style="flex:1">
+                        <input type="text" id="aName" placeholder="Название нового лота..." style="flex:1">
                         <input type="number" id="aVal" value="100" style="width:80px">
                         <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; width:50px; border-radius:6px; cursor:pointer;"><i class="fas fa-plus"></i></button>
                     </div>
@@ -304,9 +340,8 @@
                     <button class="nav-btn" onclick="clearDB()" style="margin:0; width:45px; height:45px;"><i class="fas fa-eraser"></i></button>
                 </div>
 
-                <!-- КНОПКА ОНЛАЙНА -->
                 <div class="online-tag" id="onlineCounter" onclick="showOnlineList()">
-                    <i class="fas fa-circle" style="font-size:8px;"></i>
+                    <i class="fas fa-circle" style="font-size:8px; animation: pulse 1.5s infinite;"></i>
                     ОНЛАЙН: <span id="onlineCount">0</span>
                 </div>
             </div>
@@ -314,6 +349,7 @@
 
         <section id="view-vip" class="view-section" style="flex-direction:column; padding:50px;">
             <h2 style="color:var(--red); letter-spacing:3px;"><i class="fas fa-user-slash"></i> ЧЕРНЫЙ СПИСОК</h2>
+            <p style="color:#555; margin-bottom:30px;">Пользователи из этого списка не могут предлагать лоты и голосовать.</p>
             <div id="banList" style="max-width: 800px; overflow-y: auto;"></div>
         </section>
 
@@ -322,6 +358,7 @@
     </main>
 
     <script>
+        // ИНИЦИАЛИЗАЦИЯ
         const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -331,6 +368,7 @@
         let tSec = 600, tInt = null;
         let onlineUsers = {};
 
+        // НАВИГАЦИЯ
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
@@ -338,31 +376,17 @@
             if(b) b.classList.add('active');
         }
 
-        function toggleSide() { document.getElementById('sidePanel').classList.toggle('collapsed'); }
-
-        // ПРАВКА ОНЛАЙНА
-        function showOnlineList() {
-            const el = document.getElementById('onlinePopupOverlay');
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        function toggleSide() {
+            const p = document.getElementById('sidePanel');
+            const icon = document.getElementById('sideIcon');
+            p.classList.toggle('collapsed');
+            icon.className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
         }
 
-        // ПРАВКА ПРАВИЛ (УБИРАЕМ ЛАГИ ЧЕРЕЗ TIMEOUT)
-        let rulesTimer;
-        function saveRules() {
-            clearTimeout(rulesTimer);
-            rulesTimer = setTimeout(() => {
-                db.ref('auction/rules').set(document.getElementById('rulesArea').innerText);
-            }, 500);
-        }
-
-        // ФУНКЦИЯ БАНА
-        function banUser(uid, name) {
-            if(!uid || uid === 'admin' || uid === 'undefined') return alert('ID пользователя не найден');
-            if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) db.ref('bans/' + uid).set(name);
-        }
-
+        // FIREBASE СЛУШАТЕЛИ
         db.ref('lots').on('value', s => { 
-            data = s.val() ? Object.entries(s.val()) : []; 
+            const val = s.val();
+            data = val ? Object.entries(val) : []; 
             renderAll(); 
         });
 
@@ -372,23 +396,41 @@
             list.innerHTML = '';
             Object.entries(bans).forEach(([uid, name]) => {
                 list.innerHTML += `
-                    <div class="ban-item" style="display:flex; justify-content:space-between; background:#161616; padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--red);">
-                        <span><b>${name}</b> (ID: ${uid})</span>
-                        <button style="background:#222; color:var(--red); border:1px solid var(--red); padding:5px 10px; cursor:pointer;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
+                    <div class="ban-item">
+                        <span><i class="fas fa-user" style="margin-right:15px; color:#444;"></i> <b>${name}</b> <small style="color:#444; margin-left:10px;">ID: ${uid}</small></span>
+                        <button class="unban-btn" style="background:#222; color:var(--red); border:1px solid var(--red); padding:8px 15px; border-radius:5px; cursor:pointer;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
                     </div>`;
             });
         });
 
         db.ref('presence').on('value', s => {
             onlineUsers = s.val() || {};
-            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним');
-            document.getElementById('onlineCount').innerText = names.length;
-            document.getElementById('onlineNamesList').innerHTML = names.join('<br>');
+            const count = Object.keys(onlineUsers).length;
+            document.getElementById('onlineCount').innerText = count;
         });
 
         db.ref('auction/rules').once('value', s => {
             if(s.val()) document.getElementById('rulesArea').innerText = s.val();
         });
+
+        // ФУНКЦИИ
+        function showOnlineList() {
+            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним').join('\n');
+            alert("ПОЛЬЗОВАТЕЛИ ОНЛАЙН:\n" + (names || "Пусто"));
+        }
+
+        function saveRules() {
+            db.ref('auction/rules').set(document.getElementById('rulesArea').innerText);
+        }
+
+        function updateLock() {
+            db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked);
+        }
+
+        function banUser(uid, name) {
+            if(!uid || uid === 'admin') return;
+            if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) db.ref('bans/' + uid).set(name);
+        }
 
         function renderAll() {
             const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
@@ -398,30 +440,38 @@
 
             data.forEach(([id, d], i) => {
                 const isOut = d.active === false;
-                const p = total > 0 ? (((d.votes || 0)/total)*100).toFixed(1) : 0;
+                const currentVotes = d.votes || d.val || 0;
+                const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
                 
                 if(!(isOut && hide)) {
                     wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
-                        <span style="flex:1;">${d.name}</span><b>${d.votes || 0}</b>
+                        <span style="flex:1; overflow:hidden; font-weight:bold;">${d.name}</span>
+                        ${showPct ? `<span style="color:var(--accent); font-size:11px; margin:0 10px;">${p}%</span>` : ''}
+                        <b style="color:#fff">${currentVotes}</b>
                     </div>`;
                 }
 
+                const vNames = d.voters ? Object.values(d.voters).join(', ') : 'Голосов еще нет';
                 al.innerHTML += `
-                <div class="auc-item-row" style="${isOut ? 'opacity:0.3' : ''}">
+                <div class="auc-item-row">
                     <div style="display:flex; align-items:center;">
-                        <span style="width:30px; color:#444;">${i+1}</span>
-                        <span style="flex:1; font-weight:bold;">${d.name}</span>
-                        <span style="color:var(--accent); font-weight:900; margin-right:20px;">${p}%</span>
-                        <span style="margin-right:20px;">${d.votes || 0}</span>
-                        <i class="fas fa-user-times" style="cursor:pointer; color:var(--red); margin-right:15px; font-size:18px;" title="ЗАБАНЬ ЕГО" onclick="banUser('${d.uid}', '${d.author}')"></i>
-                        <i class="fas fa-times" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                        <span style="width:30px; color:#444; font-weight:bold;">${i+1}</span>
+                        <span style="flex:1; font-weight:bold; font-size:16px;">${d.name}</span>
+                        <span style="color:var(--accent); font-weight:900; margin-right:20px; font-size:14px;">${p}%</span>
+                        <span style="margin-right:20px; font-weight:bold; display:flex; align-items:center; background:#000; padding:5px 10px; border-radius:5px;">
+                            ${currentVotes} 
+                            <i class="fas fa-users voters-btn" title="Кто голосовал?" onclick="alert('ЗА ${d.name.toUpperCase()} ГОЛОСОВАЛИ:\\n${vNames}')"></i>
+                        </span>
+                        <i class="fas fa-user-slash" style="cursor:pointer; color:#333; margin-right:15px;" onclick="banUser('${d.uid}', '${d.author}')"></i>
+                        <i class="fas fa-times" style="cursor:pointer; color:#ff4b4b;" onclick="db.ref('lots/${id}').remove()"></i>
                     </div>
+                    <div style="font-size:11px; color:#444; padding-left:30px; margin-top:5px;">ПРЕДЛОЖИЛ: <span style="color:#777">${d.author || 'ADMIN'}</span></div>
                 </div>`;
             });
             drawWheel();
         }
 
-        // ВСЯ ОСТАЛЬНАЯ ЛОГИКА ТВОЯ (КОЛЕСО, ТАЙМЕР)
+        // ТАЙМЕР ЛОГИКА
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
@@ -429,11 +479,16 @@
             tSec = (d * 86400) + (h * 3600) + (m * 60);
             tUpdate();
         }
+
         function tUpdate() { 
             const d = Math.floor(tSec / 86400), h = Math.floor((tSec % 86400) / 3600), m = Math.floor((tSec % 3600) / 60), s = tSec % 60;
-            document.getElementById('tDisp').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; 
+            let str = d > 0 ? d+"d " : "";
+            str += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            document.getElementById('tDisp').innerText = str; 
             db.ref('auction').update({ timer: tSec, pass: PASS });
+            db.ref('auction/votingClosed').set(tSec <= 0 && document.getElementById('lockVoting').checked);
         }
+
         function tToggle() { 
             const b = document.getElementById('tPlay'); 
             if(tInt) { clearInterval(tInt); tInt=null; b.className="fas fa-play"; } 
@@ -441,8 +496,10 @@
         }
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
+
+        // КОЛЕСО ЛОГИКА
         function setWType(t) { wType = t; document.getElementById('tNew').classList.toggle('active', t==='new'); document.getElementById('tClass').classList.toggle('active', t==='class'); drawWheel(); }
-        function togglePct() { showPct = !showPct; renderAll(); }
+        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
         function drawWheel() {
             const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
@@ -452,37 +509,92 @@
             const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
-                const slice = ((d.votes || 0)/total) * (Math.PI*2);
+                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
                 ctx.save(); ctx.translate(290,290); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,270,0,slice);
-                ctx.fillStyle = `hsl(${d.hue},65%,45%)`; ctx.fill();
-                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 16px sans-serif"; ctx.textAlign="right";
-                ctx.fillText(d.name, 250, 5); ctx.restore();
+                if(wType === 'class') { 
+                    ctx.fillStyle = i % 2 === 0 ? '#111' : '#181818'; 
+                    ctx.strokeStyle = `hsl(${d.hue},70%,50%)`; 
+                    ctx.lineWidth = 3; 
+                    ctx.stroke(); 
+                } else { 
+                    ctx.fillStyle = `hsl(${d.hue},65%,45%)`; 
+                }
+                ctx.fill();
+                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 16px sans-serif"; ctx.textAlign="right"; ctx.shadowColor="black"; ctx.shadowBlur=5;
+                ctx.fillText(d.name.length > 18 ? d.name.substring(0,16)+'..' : d.name, 250, 5); ctx.restore();
                 curr += slice;
             });
         }
 
         function startSpin() {
-            if(isSpinning) return; isSpinning = true;
-            const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 40+Math.random()*50, sRot = rotation;
+            const active = data.filter(([id,d]) => d.active !== false);
+            if(isSpinning || active.length < 2) return;
+            isSpinning = true; document.getElementById('simpleStatus').innerText = '';
+            const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 40 + Math.random()*50, sRot = rotation;
             function anim(now) {
                 const p = Math.min((now-start)/dur, 1), ease = 1 - Math.pow(1-p, 5);
                 rotation = sRot + pwr * ease; drawWheel();
                 if(p < 1) requestAnimationFrame(anim);
-                else { isSpinning = false; }
+                else { 
+                    isSpinning = false; 
+                    const win = getWin();
+                    if(win) { updateStatus(win.name, active.length === 2); db.ref('lots/'+win.id).update({active: false}); }
+                }
             }
             requestAnimationFrame(anim);
         }
 
+        function getWin() {
+            const active = data.filter(([id,d]) => d.active !== false);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
+            const norm = ((rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
+            const target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
+            let cur = 0;
+            for(const [id, d] of active) {
+                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
+                if(target >= cur && target < cur + slice) return {id, name: d.name};
+                cur += slice;
+            }
+        }
+
+        function updateStatus(name, isFinal) {
+            const st = document.getElementById('simpleStatus');
+            if(isFinal) {
+                const winnerObj = data.filter(([id,d]) => d.active !== false && d.name !== name)[0];
+                st.style.color = "var(--accent)"; st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + (winnerObj ? winnerObj[1].name : name);
+            } else {
+                st.style.color = "var(--red)"; st.innerText = "❌ ВЫБЫЛ: " + name;
+            }
+            setTimeout(() => { st.innerText = ''; }, 5000);
+        }
+
         function addLot() { 
             const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||0; 
-            if(n) { const id = Date.now(); db.ref('lots/' + id).set({ id, name: n, votes: v, val: v, hue: Math.random()*360, active: true, author: 'ADMIN', uid: 'admin' }); }
+            if(n) {
+                const id = Date.now();
+                db.ref('lots/' + id).set({ id, name: n, votes: v, val: v, hue: Math.random()*360, active: true, author: 'ADMIN', uid: 'admin' }); 
+            }
             document.getElementById('aName').value = '';
         }
 
         function clearDB() { if(confirm("УДАЛИТЬ ВСЕ ДАННЫЕ?")) { db.ref('lots').remove(); db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); } }
-        function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg') document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else { document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex'; } }; r.readAsDataURL(i.files[0]); }}
-        function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
+        
+        function up(i, t) { 
+            if(i.files[0]){ 
+                const r=new FileReader(); 
+                r.onload=e=>{ 
+                    if(t==='bg') document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; 
+                    else { document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex'; } 
+                }; 
+                r.readAsDataURL(i.files[0]); 
+            }
+        }
+        
+        // СТИЛИ ОНЛАЙН ПУЛЬСАЦИИ
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }`;
+        document.head.appendChild(style);
 
         tUpdate();
     </script>
