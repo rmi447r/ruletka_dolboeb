@@ -10,7 +10,7 @@
         :root { --bg: #0a0a0a; --panel: #111; --accent: #00a2ff; --red: #ff4b4b; --sidebar-w: 60px; }
         body { margin: 0; background: var(--bg); color: #efefef; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; background-size: cover; background-position: center; }
         .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #1a1a1a; z-index: 100; }
-        .nav-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 10px; cursor: pointer; color: #444; transition: 0.3s; background: none; border: none; outline: none; }
+        .nav-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 10px; cursor: pointer; color: #444; transition: 0.3s; background: none; border: none; }
         .nav-btn.active { color: var(--accent); background: rgba(0, 162, 255, 0.1); }
         .app-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
         .view-section { display: none; width: 100%; height: 100%; }
@@ -24,11 +24,12 @@
         #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
         .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
         
+        /* ИСПРАВЛЕННЫЙ CSS ДЛЯ ЛОГОТИПА */
         .center-logo-box { 
             position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; 
             border: 3px solid #222; z-index: 40; display: none; overflow: hidden; 
-            top: 50%; left: 50%; transform: translate(-50%, -10%);
-            justify-content: center; align-items: center;
+            top: 50%; left: 50%; transform: translate(-50%, -10%); /* -10% учитывает маркер сверху */
+            justify-content: center; align-items: center; /* Центрируем картинку внутри круга */
         }
         .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -36,19 +37,15 @@
         .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
         .auc-container { display: grid; grid-template-columns: 300px 1fr 300px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
         .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; position: absolute; bottom: 0; }
-        
-        /* Стили для управления юзерами */
-        .user-item { display: flex; align-items: center; padding: 12px; background: #111; border-radius: 8px; border: 1px solid #222; margin-bottom: 10px; justify-content: space-between; }
-        .btn-reset { background: var(--red); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body id="mainBody">
 
     <aside class="sidebar">
-        <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-dharmachakra"></i></button>
-        <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-list-ul"></i></button>
-        <button class="nav-btn" onclick="setView('vip', this)"><i class="fas fa-users"></i></button>
-        <button class="nav-btn" style="margin-top: auto; margin-bottom: 20px;" onclick="clearDB()"><i class="fas fa-trash-alt"></i></button>
+        <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-home"></i></button>
+        <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-envelope"></i></button>
+        <button class="nav-btn" onclick="setView('vip', this)"><i class="fas fa-user-tie"></i></button>
+        <button class="nav-btn" style="margin-top: auto; margin-bottom: 20px;"><i class="fas fa-cog"></i></button>
     </aside>
 
     <main class="app-content">
@@ -84,6 +81,7 @@
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fBg').click()">ФОН</button>
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
                 </div>
+                <button onclick="clearDB()" style="margin-top:auto; background:none; border:1px solid #222; color:#333; padding:10px; border-radius:6px; cursor:pointer; font-size:11px;">ОЧИСТИТЬ БАЗУ</button>
             </div>
         </section>
 
@@ -91,7 +89,7 @@
             <div class="auc-container">
                 <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
                     <h3>Правила</h3>
-                    <div id="rulesBox" contenteditable="true" style="color:#888; min-height: 200px;" oninput="saveRules()">Текст правил...</div>
+                    <div contenteditable="true" style="color:#555;">Текст правил...</div>
                 </div>
                 <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
                     <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
@@ -112,15 +110,10 @@
                 </div>
             </div>
             <div class="auc-footer">
+                <button class="nav-btn" onclick="clearDB()"><i class="fas fa-trash"></i></button>
+                <button class="nav-btn active"><i class="fas fa-list"></i> Правила</button>
                 <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
             </div>
-        </section>
-
-        <section id="view-vip" class="view-section" style="padding: 40px; flex-direction: column;">
-            <h2 style="color: var(--accent);"><i class="fas fa-users"></i> Управление зрителями</h2>
-            <p style="color: #555;">Тут можно обнулить голос юзера, если он ошибся или накрутил.</p>
-            <div id="userList" style="flex: 1; overflow-y: auto; max-width: 600px; margin-top: 20px;">
-                </div>
         </section>
 
         <input type="file" id="fBg" hidden onchange="up(this,'bg')">
@@ -139,8 +132,7 @@
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active'); 
-            if(b) b.classList.add('active');
+            if(id !== 'vip') { document.getElementById('view-'+id).classList.add('active'); b.classList.add('active'); }
         }
 
         function toggleSide() {
@@ -159,31 +151,22 @@
 
         function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
-        // ЗАГРУЗКА ПРАВИЛ
-        db.ref('rules').on('value', s => { if(s.val()) document.getElementById('rulesBox').innerText = s.val(); });
-        function saveRules() { db.ref('rules').set(document.getElementById('rulesBox').innerText); }
-
-        // ГЛАВНЫЙ ОБРАБОТЧИК ДАННЫХ
-        db.ref().on('value', snap => {
-            const world = snap.val() || {};
-            data = world.lots ? Object.entries(world.lots) : [];
-            const voters = world.voters || {};
-            renderAll(voters);
+        db.ref('lots').on('value', s => { 
+            const val = s.val();
+            data = val ? Object.entries(val) : []; 
+            renderAll(); 
         });
 
-        function renderAll(voters) {
-            const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), ul = document.getElementById('userList'), hide = document.getElementById('hideOut').checked;
-            wl.innerHTML = ''; al.innerHTML = ''; ul.innerHTML = '';
-            
+        function renderAll() {
+            const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
+            wl.innerHTML = ''; al.innerHTML = '';
             const active = data.filter(([id,d]) => d.active !== false);
             const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
 
-            // Рендер лотов
             data.forEach(([id, d], i) => {
                 const isOut = d.active === false;
                 const currentVotes = d.votes || d.val || 0;
                 const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
-                
                 if(!(isOut && hide)) {
                     wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
@@ -191,31 +174,15 @@
                         <b>${currentVotes}</b>
                     </div>`;
                 }
-
                 al.innerHTML += `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #1a1a1a;">
                     <span style="width:30px; color:#333;">${i+1}</span>
-                    <span style="flex:1;"><b>${d.name}</b> <br><small style="color:#444">от ${d.creator || 'admin'}</small></span>
+                    <span style="flex:1;">${d.name}</span>
                     <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
                     <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle"></i></span>
-                    <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                    <i class="fas fa-trash" style="cursor:pointer; color:#222;" onclick="db.ref('lots/${id}').remove()"></i>
                 </div>`;
             });
-
-            // Рендер юзеров
-            Object.entries(voters || {}).forEach(([uid, v]) => {
-                ul.innerHTML += `<div class="user-item">
-                    <span><b>${v.name}</b> <small style="color:#444; margin-left:10px;">выбор: ${v.lot || 'нет'}</small></span>
-                    <button class="btn-reset" onclick="resetUser('${uid}')">СБРОСИТЬ</button>
-                </div>`;
-            });
-
             drawWheel();
-        }
-
-        function resetUser(uid) {
-            if(confirm("Удалить голос этого пользователя?")) {
-                db.ref('voters/' + uid).remove();
-            }
         }
 
         function drawWheel() {
@@ -226,16 +193,26 @@
             const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
-                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
+                const currentVotes = d.votes || d.val || 0;
+                const slice = (currentVotes/total) * (Math.PI*2);
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
                 if(wType === 'class') {
                     ctx.fillStyle = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-                    ctx.strokeStyle = `hsl(${d.hue},70%,50%)`; ctx.lineWidth = 2; ctx.stroke();
-                } else { ctx.fillStyle = `hsl(${d.hue},65%,45%)`; }
+                    ctx.strokeStyle = `hsl(${d.hue},70%,50%)`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = `hsl(${d.hue},65%,45%)`;
+                }
                 ctx.fill();
+                
                 ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
-                let txt = d.name; if(txt.length > 16) txt = txt.substring(0, 14) + '...';
+                
+                // УМНАЯ ОБРЕЗКА ТЕКСТА
+                let txt = d.name;
+                if(txt.length > 16) txt = txt.substring(0, 14) + '...';
+                
                 ctx.fillText(txt, 240, 5); ctx.restore();
                 curr += slice;
             });
@@ -270,7 +247,8 @@
             const target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
             let cur = 0;
             for(const [id, d] of active) {
-                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
+                const currentVotes = d.votes || d.val || 0;
+                const slice = (currentVotes/total) * (Math.PI*2);
                 if(target >= cur && target < cur + slice) return {id, name: d.name};
                 cur += slice;
             }
@@ -281,9 +259,11 @@
             if(isFinal) {
                 const winnerObj = data.filter(([id,d]) => d.active !== false && d.name !== name)[0];
                 const winner = winnerObj ? winnerObj[1].name : name;
-                st.style.color = "var(--accent)"; st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + winner;
+                st.style.color = "var(--accent)";
+                st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + winner;
             } else {
-                st.style.color = "var(--red)"; st.innerText = "❌ ВЫБЫЛ: " + name;
+                st.style.color = "var(--red)";
+                st.innerText = "❌ ВЫБЫЛ: " + name;
             }
             setTimeout(() => { st.innerText = ''; }, 4000);
         }
@@ -307,15 +287,17 @@
             const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||1; 
             if(n) {
                 const id = Date.now();
-                db.ref('lots/' + id).set({ id, name: n, votes: v, val: v, hue: Math.random()*360, active: true, creator: 'ADMIN' }); 
+                db.ref('lots/' + id).set({ 
+                    id: id, name: n, votes: v, val: v,
+                    hue: Math.random()*360, active: true 
+                }); 
             }
             document.getElementById('aName').value = '';
         }
 
         function clearDB() { 
-            if(confirm("УДАЛИТЬ ВСЕ ДАННЫЕ?")) {
+            if(confirm("УДАЛИТЬ ВСЕ?")) {
                 db.ref('lots').remove();
-                db.ref('voters').remove();
                 db.ref('auction').update({ timer: 600, pass: PASS });
             }
         }
