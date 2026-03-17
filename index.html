@@ -11,25 +11,38 @@
         #timerDisplay { font-size: 18vw; font-weight: 800; color: #00a2ff; text-shadow: 0 0 20px rgba(0, 162, 255, 0.5); margin-bottom: 20px; font-family: monospace; }
         @media (min-width: 600px) { #timerDisplay { font-size: 80px; } }
         .container { width: 100%; max-width: 600px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 30px; }
+        
+        /* Кнопка Твича */
+        .twitch-btn { background: #6441a5; color: white; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .twitch-btn:hover { background: #7d5bbe; }
+        .user-info { display: none; align-items: center; gap: 10px; margin-bottom: 20px; background: #1a1a1a; padding: 10px 20px; border-radius: 50px; border: 1px solid #6441a5; }
+        .user-info img { width: 30px; height: 30px; border-radius: 50%; }
+
+        .input-group { display: none; gap: 10px; margin-bottom: 30px; } /* Скрыто до логина */
         input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 16px; }
-        input:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-add { background: #00a2ff; border: none; color: #fff; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 24px; }
-        .btn-add:disabled { background: #333; cursor: not-allowed; opacity: 0.5; }
-        .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .lot-info { display: flex; flex-direction: column; overflow: hidden; }
-        .lot-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+        
+        .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .lot-info { display: flex; flex-direction: column; }
+        .lot-name { font-size: 18px; font-weight: bold; }
         .lot-votes { color: #00a2ff; font-size: 14px; }
-        .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; flex-shrink: 0; }
-        .btn-vote:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; }
-        .status-msg { color: #00a2ff; margin-bottom: 15px; font-weight: bold; display: none; text-align: center; background: rgba(0, 162, 255, 0.1); padding: 10px; border-radius: 10px; width: 100%; box-sizing: border-box; }
+        .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .btn-vote:disabled { opacity: 0.1; cursor: not-allowed; }
+        
+        .status-msg { color: #00a2ff; margin-bottom: 15px; font-weight: bold; display: none; text-align: center; background: rgba(0, 162, 255, 0.1); padding: 10px; border-radius: 10px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <div id="timerDisplay">10:00:00</div>
-    <div id="statusMessage" class="status-msg">Ви вже прийняли участь в аукціоні ✓</div>
+    <div id="timerDisplay">00:00:00</div>
+
+    <button id="loginBtn" class="twitch-btn" onclick="loginTwitch()">Войти через Twitch</button>
+    <div id="userInfo" class="user-info">
+        <img id="userAvatar" src="" alt="">
+        <span id="userName"></span>
+    </div>
+
+    <div id="statusMessage" class="status-msg">Ви вже прийняли участь ✓</div>
 
     <div class="container">
         <div class="input-group" id="inputSection">
@@ -40,6 +53,9 @@
     </div>
 
     <script>
+        const CLIENT_ID = 'wieivkm1m1fyhbfliadenazscmcoct'; // Твой ID
+        const REDIRECT_URI = 'https://rmi447r.github.io/ruletka_dolboeb/index.html';
+        
         const firebaseConfig = { 
             apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
             databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
@@ -47,36 +63,61 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Флаг в памяти для мгновенной блокировки (защита от клик-спама)
-        let isProcessing = false;
+        let currentUser = null;
 
-        function checkGlobalLock() {
-            const hasParticipated = localStorage.getItem('auction_participated');
-            if (hasParticipated || isProcessing) {
-                const input = document.getElementById('newLotName');
-                const btn = document.getElementById('btnAddLot');
-                if(input) input.disabled = true;
-                if(btn) btn.disabled = true;
-                document.getElementById('statusMessage').style.display = 'block';
-                return true;
-            }
-            return false;
+        // 1. ЛОГИКА TWITCH
+        function loginTwitch() {
+            const url = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email`;
+            window.location.href = url;
         }
 
-        db.ref('auction/timer').on('value', snap => {
-            const t = snap.val() || 0;
-            const m = Math.floor(t / 60);
-            const s = t % 60;
-            document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
-        });
+        async function checkAuth() {
+            const hash = window.location.hash;
+            if (hash) {
+                const params = new URLSearchParams(hash.substring(1));
+                const token = params.get('access_token');
+                if (token) {
+                    const res = await fetch('https://api.twitch.tv/helix/users', {
+                        headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (data.data[0]) {
+                        currentUser = data.data[0];
+                        showUser();
+                        checkParticipation();
+                    }
+                }
+            }
+        }
 
+        function showUser() {
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userAvatar').src = currentUser.profile_image_url;
+            document.getElementById('userName').innerText = currentUser.display_name;
+            document.getElementById('inputSection').style.display = 'flex';
+        }
+
+        // 2. ПРОВЕРКА ГОЛОСОВАЛ ЛИ УЖЕ (ЧЕРЕЗ FIREBASE)
+        function checkParticipation() {
+            if (!currentUser) return;
+            db.ref('voters/' + currentUser.id).on('value', snap => {
+                if (snap.exists()) {
+                    document.getElementById('inputSection').style.display = 'none';
+                    document.getElementById('statusMessage').style.display = 'block';
+                    // Блокируем все кнопки голосования
+                    const btns = document.querySelectorAll('.btn-vote');
+                    btns.forEach(b => b.disabled = true);
+                }
+            });
+        }
+
+        // 3. РАБОТА С ЛОТАМИ
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
             const data = snap.val();
             if (!data) return;
-
-            const isLocked = checkGlobalLock();
 
             const sortedLots = Object.keys(data)
                 .map(key => ({ id: key, ...data[key] }))
@@ -91,22 +132,25 @@
                         <span class="lot-name">${lot.name}</span>
                         <span class="lot-votes">${lot.votes || 0} голосов</span>
                     </div>
-                    <button class="btn-vote" ${isLocked ? 'disabled' : ''} onclick="vote('${lot.id}')">
-                        ${isLocked ? '✓' : '+1'}
-                    </button>
+                    <button class="btn-vote" id="btn-${lot.id}" onclick="vote('${lot.id}')"> +1 </button>
                 `;
                 container.appendChild(div);
             });
+            if (currentUser) checkParticipation();
         });
 
-        function vote(id) {
-            if (localStorage.getItem('auction_participated') || isProcessing) return;
+        function vote(lotId) {
+            if (!currentUser) return alert('Сначала войди через Twitch!');
             
-            isProcessing = true; // Мгновенный блок в памяти
-            localStorage.setItem('auction_participated', 'true');
-            checkGlobalLock();
+            // Записываем голос
+            db.ref('voters/' + currentUser.id).set({
+                name: currentUser.display_name,
+                lot: lotId,
+                time: Date.now()
+            });
 
-            db.ref('lots/' + id).transaction(lot => {
+            // Плюсуем в лот
+            db.ref('lots/' + lotId).transaction(lot => {
                 if (lot) {
                     lot.votes = (lot.votes || 0) + 1;
                     lot.val = (lot.val || 0) + 1;
@@ -116,25 +160,40 @@
         }
 
         function suggestLot() {
-            if (localStorage.getItem('auction_participated') || isProcessing) return;
-
+            if (!currentUser) return alert('Сначала войди через Twitch!');
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
             if (!name) return;
 
-            isProcessing = true; // Мгновенный блок в памяти
-            localStorage.setItem('auction_participated', 'true');
-            checkGlobalLock();
+            const lotId = Date.now();
+            
+            // Записываем что чел участвовал
+            db.ref('voters/' + currentUser.id).set({
+                name: currentUser.display_name,
+                created: name
+            });
 
-            const id = Date.now();
-            db.ref('lots/' + id).set({ 
-                id: id, name: name, votes: 1, val: 1, hue: Math.random() * 360, active: true 
-            }).then(() => {
-                input.value = '';
+            // Создаем лот
+            db.ref('lots/' + lotId).set({ 
+                id: lotId, 
+                name: name, 
+                votes: 1, 
+                val: 1, 
+                hue: Math.random() * 360, 
+                active: true,
+                creator: currentUser.display_name, // Запоминаем кто создал
+                creatorId: currentUser.id
             });
         }
-        
-        checkGlobalLock();
+
+        db.ref('auction/timer').on('value', snap => {
+            const t = snap.val() || 0;
+            const m = Math.floor(t / 60);
+            const s = t % 60;
+            document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
+        });
+
+        checkAuth();
     </script>
 </body>
 </html>
