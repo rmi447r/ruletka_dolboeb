@@ -240,58 +240,32 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-        /* ПРАВКА №2: ОКНО ОНЛАЙНА В ПРАВОМ НИЖНЕМ УГЛУ */
-        #onlineListOverlay {
+        /* НОВОЕ ОКНО ОНЛАЙНА В ПРАВОМ УГЛУ */
+        #onlinePopup {
             display: none;
             position: fixed;
             bottom: 70px;
-            right: 25px;
-            width: 300px;
-            max-height: 400px;
-            background: #111;
+            right: 30px;
+            width: 250px;
+            max-height: 300px;
+            background: #000;
             border: 1px solid var(--accent);
-            border-radius: 12px;
-            z-index: 500;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-            flex-direction: column;
-        }
-        .online-header {
+            border-radius: 10px;
+            z-index: 200;
             padding: 15px;
-            background: #1a1a1a;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 12px 12px 0 0;
-        }
-        .online-content {
-            padding: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,1);
             overflow-y: auto;
-            flex: 1;
-        }
-        .online-user-row {
-            padding: 8px 12px;
-            border-bottom: 1px solid #222;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
         }
     </style>
 </head>
 <body id="mainBody">
 
-    <!-- ПРАВКА №2: HTML СТРУКТУРА ДЛЯ ОНЛАЙНА -->
-    <div id="onlineListOverlay">
-        <div class="online-header">
-            <span style="font-weight: bold; color: var(--accent); font-size: 14px;">ПОЛЬЗОВАТЕЛИ ОНЛАЙН</span>
-            <i class="fas fa-times" style="cursor:pointer;" onclick="showOnlineList()"></i>
+    <!-- НОВОЕ ОКОШКО ОНЛАЙНА -->
+    <div id="onlinePopup">
+        <div style="font-size: 11px; color: var(--accent); font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; display: flex; justify-content: space-between;">
+            КТО В СЕТИ <i class="fas fa-times" style="cursor:pointer;" onclick="showOnlineList()"></i>
         </div>
-        <div id="onlineUserContainer" class="online-content">
-            <!-- Сюда попадут имена -->
-        </div>
-        <div style="padding:10px; background: #000; border-radius: 0 0 12px 12px;">
-            <button onclick="showOnlineList()" style="width:100%; padding:8px; background:#222; border:none; color:#fff; border-radius:5px; cursor:pointer;">ЗАКРЫТЬ</button>
-        </div>
+        <div id="onlineUserNames" style="font-size: 13px; color: #eee; line-height: 1.6;"></div>
     </div>
 
     <aside class="sidebar">
@@ -349,8 +323,7 @@
             <div class="auc-container">
                 <div class="auc-card" style="padding: 20px;">
                     <h3 style="margin-top:0"><i class="fas fa-scroll"></i> ПРАВИЛА</h3>
-                    <!-- ПРАВКА №1: СОХРАНЕНИЕ ПРАВИЛ -->
-                    <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none; min-height: 100px;" oninput="saveRules()">Напишите правила здесь...</div>
+                    <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none; min-height:100px;" oninput="saveRules()">Напишите правила здесь...</div>
                 </div>
 
                 <div class="auc-card">
@@ -410,7 +383,6 @@
     </main>
 
     <script>
-        // ИНИЦИАЛИЗАЦИЯ
         const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -420,7 +392,6 @@
         let tSec = 600, tInt = null;
         let onlineUsers = {};
 
-        // НАВИГАЦИЯ
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
@@ -435,7 +406,6 @@
             icon.className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
         }
 
-        // FIREBASE СЛУШАТЕЛИ
         db.ref('lots').on('value', s => { 
             const val = s.val();
             data = val ? Object.entries(val) : []; 
@@ -457,50 +427,34 @@
 
         db.ref('presence').on('value', s => {
             onlineUsers = s.val() || {};
-            const userEntries = Object.entries(onlineUsers);
-            document.getElementById('onlineCount').innerText = userEntries.length;
-            
-            // Обновляем контент в нашем окне
-            const container = document.getElementById('onlineUserContainer');
-            if(userEntries.length === 0) {
-                container.innerHTML = '<div style="color:#444; text-align:center; padding:20px;">Никого нет в сети</div>';
-            } else {
-                container.innerHTML = userEntries.map(([id, u]) => `
-                    <div class="online-user-row">
-                        <span><i class="fas fa-user" style="font-size:10px; color:#333; margin-right:8px;"></i>${u.name || 'Аноним'}</span>
-                        <span style="color:#333; font-size:10px;">ID: ${id.substring(0,6)}</span>
-                    </div>
-                `).join('');
-            }
+            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним');
+            document.getElementById('onlineCount').innerText = names.length;
+            document.getElementById('onlineUserNames').innerHTML = names.join('<br>');
         });
 
         db.ref('auction/rules').once('value', s => {
             if(s.val()) document.getElementById('rulesArea').innerText = s.val();
         });
 
-        // ФУНКЦИИ
-        // ПРАВКА №2: ПЕРЕКЛЮЧЕНИЕ ОКНА ОНЛАЙНА
+        // ПРАВКА №2: ВКЛ/ВЫКЛ ОКОШКА ОНЛАЙНА (ВМЕСТО АЛЕРТА)
         function showOnlineList() {
-            const el = document.getElementById('onlineListOverlay');
-            el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+            const el = document.getElementById('onlinePopup');
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
         // ПРАВКА №1: СОХРАНЕНИЕ ПРАВИЛ
         function saveRules() {
-            const txt = document.getElementById('rulesArea').innerText;
-            db.ref('auction/rules').set(txt);
+            const text = document.getElementById('rulesArea').innerText;
+            db.ref('auction/rules').set(text);
         }
 
         function updateLock() {
             db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked);
         }
 
-        // ПРАВКА №3: КРАСНЫЙ ЧЕЛОВЕЧЕК И РАБОТАЮЩИЙ БАН
+        // ПРАВКА №3: РАБОЧИЙ БАН
         function banUser(uid, name) {
-            if(!uid || uid === 'admin' || uid === 'undefined') {
-                alert("Ошибка: Невозможно забанить этого пользователя (ID не найден)");
-                return;
-            }
+            if(!uid || uid === 'admin' || uid === 'undefined') return alert('Не удается найти ID пользователя');
             if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) {
                 db.ref('bans/' + uid).set(name);
             }
@@ -527,7 +481,7 @@
 
                 const vNames = d.voters ? Object.values(d.voters).join(', ') : 'Голосов еще нет';
                 
-                // ПРАВКА №3: ИКОНКА КРАСНОГО ЧЕЛОВЕЧКА (fa-user-times)
+                // ПРАВКА №3: КРАСНЫЙ ЧЕЛОВЕЧЕК fa-user-times
                 al.innerHTML += `
                 <div class="auc-item-row">
                     <div style="display:flex; align-items:center;">
@@ -538,8 +492,8 @@
                             ${currentVotes} 
                             <i class="fas fa-users voters-btn" title="Кто голосовал?" onclick="alert('ЗА ${d.name.toUpperCase()} ГОЛОСОВАЛИ:\\n${vNames}')"></i>
                         </span>
-                        <i class="fas fa-user-times" style="cursor:pointer; color:var(--red); margin-right:15px; font-size:18px;" title="Забанить автора" onclick="banUser('${d.uid}', '${d.author}')"></i>
-                        <i class="fas fa-times" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                        <i class="fas fa-user-times" style="cursor:pointer; color:var(--red); margin-right:15px;" title="ЗАБАНЬ ЕГО" onclick="banUser('${d.uid}', '${d.author}')"></i>
+                        <i class="fas fa-times" style="cursor:pointer; color:#ff4b4b;" onclick="db.ref('lots/${id}').remove()"></i>
                     </div>
                     <div style="font-size:11px; color:#444; padding-left:30px; margin-top:5px;">ПРЕДЛОЖИЛ: <span style="color:#777">${d.author || 'ADMIN'}</span></div>
                 </div>`;
@@ -547,7 +501,6 @@
             drawWheel();
         }
 
-        // ТАЙМЕР ЛОГИКА
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
@@ -573,7 +526,6 @@
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
 
-        // КОЛЕСО ЛОГИКА
         function setWType(t) { wType = t; document.getElementById('tNew').classList.toggle('active', t==='new'); document.getElementById('tClass').classList.toggle('active', t==='class'); drawWheel(); }
         function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
@@ -667,7 +619,6 @@
             }
         }
         
-        // СТИЛИ ОНЛАЙН ПУЛЬСАЦИИ
         const style = document.createElement('style');
         style.innerHTML = `@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }`;
         document.head.appendChild(style);
