@@ -7,32 +7,28 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        body { margin: 0; background: #0d0d0d; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
-        
-        /* КНОПКА ТВИЧА В УГЛУ */
+        body { margin: 0; background: #0d0d0d; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; min-height: 100vh; }
         .header-auth { position: absolute; top: 10px; right: 10px; z-index: 100; }
         .twitch-btn { background: #6441a5; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .twitch-btn:hover { background: #7d5bbe; transform: scale(1.05); }
         .user-info { display: none; align-items: center; gap: 10px; background: #1a1a1a; padding: 5px 15px; border-radius: 50px; border: 1px solid #6441a5; }
         .user-info img { width: 25px; height: 25px; border-radius: 50%; }
-
         #timerDisplay { font-size: 18vw; font-weight: 800; color: #00a2ff; text-shadow: 0 0 20px rgba(0, 162, 255, 0.5); margin: 40px 0 20px 0; font-family: monospace; }
         @media (min-width: 600px) { #timerDisplay { font-size: 80px; } }
-        
         .container { width: 100%; max-width: 600px; }
-        .input-group { display: none; gap: 10px; margin-bottom: 30px; } /* Скрыто до логина */
-        
-        input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 16px; }
+        .input-group { display: none; gap: 10px; margin-bottom: 30px; }
+        input { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 16px; outline: none; }
+        input:focus { border-color: #00a2ff; }
         .btn-add { background: #00a2ff; border: none; color: #fff; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 24px; }
-        
-        .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .lot-name { font-size: 18px; font-weight: bold; }
-        .lot-votes { color: #00a2ff; font-size: 14px; }
-        .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
-        /* ТЕКСТ ДЛЯ НЕЗАРЕГАННЫХ */
+        .lot-item { background: #141414; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; transition: 0.3s; }
+        .lot-name { font-size: 18px; font-weight: bold; display: block; }
+        .lot-author { font-size: 10px; color: #555; }
+        .lot-votes { color: #00a2ff; font-size: 14px; font-weight: bold; }
+        .btn-vote { background: #222; border: 1px solid #444; color: #fff; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-vote:hover { background: #00a2ff; border-color: #00a2ff; }
         .login-warning { color: #666; text-align: center; margin-bottom: 20px; font-style: italic; }
-        .status-msg { color: #00a2ff; margin-bottom: 15px; font-weight: bold; display: none; text-align: center; background: rgba(0, 162, 255, 0.1); padding: 10px; border-radius: 10px; width: 100%; }
+        .status-msg { color: #00a2ff; margin-bottom: 15px; font-weight: bold; display: none; text-align: center; background: rgba(0, 162, 255, 0.1); padding: 15px; border-radius: 10px; width: 100%; border: 1px dashed #00a2ff; }
+        .banned-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; color: red; display: flex; align-items: center; justify-content: center; z-index: 10000; font-size: 24px; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
@@ -42,17 +38,18 @@
         <div id="userInfo" class="user-info">
             <img id="userAvatar" src="" alt="">
             <span id="userName"></span>
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="margin-left:10px; cursor:pointer; color: #444;"></i>
         </div>
     </div>
 
-    <div id="timerDisplay">10:00:00</div>
+    <div id="timerDisplay">00:00:00</div>
     
     <div id="loginWarning" class="login-warning">Войдите через Twitch, чтобы предложить лот или проголосовать</div>
-    <div id="statusMessage" class="status-msg">Твой голос учтен! Ожидай финала ✓</div>
+    <div id="statusMessage" class="status-msg"></div>
 
     <div class="container">
         <div class="input-group" id="inputSection">
-            <input type="text" id="newLotName" placeholder="Запропонувати свій варіант...">
+            <input type="text" id="newLotName" placeholder="Напиши свою идею...">
             <button class="btn-add" id="btnAddLot" onclick="suggestLot()">+</button>
         </div>
         <div id="lotsContainer"></div>
@@ -71,52 +68,114 @@
 
         let currentUser = null;
 
+        // --- АВТОРИЗАЦИЯ И SESSION ---
         function loginTwitch() {
             const url = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email`;
             window.location.href = url;
         }
 
+        function logout() {
+            localStorage.removeItem('twitch_user');
+            location.reload();
+        }
+
         async function checkAuth() {
+            // 1. Проверяем URL на наличие токена
             const hash = window.location.hash;
             if (hash) {
                 const params = new URLSearchParams(hash.substring(1));
                 const token = params.get('access_token');
                 if (token) {
-                    try {
-                        const res = await fetch('https://api.twitch.tv/helix/users', {
-                            headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${token}` }
-                        });
-                        const data = await res.json();
-                        if (data.data && data.data[0]) {
-                            currentUser = data.data[0];
-                            showUser();
-                            checkParticipation();
-                        }
-                    } catch(e) { console.error("Ошибка авторизации", e); }
+                    await fetchUserData(token);
+                    window.location.hash = ''; // Чистим URL
+                    return;
+                }
+            }
+
+            // 2. Проверяем LocalStorage (сохранение входа)
+            const saved = localStorage.getItem('twitch_user');
+            if (saved) {
+                const session = JSON.parse(saved);
+                if (Date.now() < session.expiry) {
+                    currentUser = session.data;
+                    initUser();
+                } else {
+                    localStorage.removeItem('twitch_user');
                 }
             }
         }
 
-        function showUser() {
+        async function fetchUserData(token) {
+            try {
+                const res = await fetch('https://api.twitch.tv/helix/users', {
+                    headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.data && data.data[0]) {
+                    currentUser = data.data[0];
+                    // Сохраняем на 30 дней
+                    localStorage.setItem('twitch_user', JSON.stringify({
+                        data: currentUser,
+                        expiry: Date.now() + (30 * 24 * 60 * 60 * 1000)
+                    }));
+                    initUser();
+                }
+            } catch(e) { console.error("Ошибка Twitch API", e); }
+        }
+
+        function initUser() {
+            if (!currentUser) return;
+
+            // ПРОВЕРКА НА БАН
+            db.ref('blacklist/' + currentUser.id).on('value', snap => {
+                if (snap.exists()) {
+                    document.body.innerHTML = `<div class="banned-screen">Вам закрыт доступ к аукциону. <br>Причина: Нарушение правил.</div>`;
+                    return;
+                }
+            });
+
+            // Отображаем интерфейс
             document.getElementById('loginBtn').style.display = 'none';
             document.getElementById('loginWarning').style.display = 'none';
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('userAvatar').src = currentUser.profile_image_url;
             document.getElementById('userName').innerText = currentUser.display_name;
-            document.getElementById('inputSection').style.display = 'flex';
+            
+            // Онлайн статус для админа
+            const presenceRef = db.ref('presence/' + currentUser.id);
+            presenceRef.set({ name: currentUser.display_name, id: currentUser.id });
+            presenceRef.onDisconnect().remove();
+
+            checkParticipation();
         }
 
+        // --- ЛОГИКА УЧАСТИЯ ---
         function checkParticipation() {
             if (!currentUser) return;
+            
+            // Следим за голосом юзера
             db.ref('voters/' + currentUser.id).on('value', snap => {
+                const statusBox = document.getElementById('statusMessage');
+                const inputSection = document.getElementById('inputSection');
+                
                 if (snap.exists()) {
-                    document.getElementById('inputSection').style.display = 'none';
-                    document.getElementById('statusMessage').style.display = 'block';
+                    const data = snap.val();
+                    inputSection.style.display = 'none';
+                    statusBox.style.display = 'block';
+                    statusBox.innerText = data.created 
+                        ? `Вы предложили лот: "${data.created}". Ожидайте начала!` 
+                        : `Ваш голос учтен! Переголосовать нельзя.`;
+                    
                     document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                } else {
+                    // Если записи нет (например, админ удалил лот) - возвращаем кнопки
+                    inputSection.style.display = 'flex';
+                    statusBox.style.display = 'none';
                 }
             });
         }
 
+        // --- РАБОТА С ЛОТАМИ ---
         db.ref('lots').on('value', snap => {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
@@ -132,21 +191,45 @@
                     div.innerHTML = `
                         <div class="lot-info">
                             <span class="lot-name">${lot.name}</span>
-                            <span class="lot-votes">${lot.votes || 0} голосов</span>
+                            <span class="lot-author">от ${lot.author || 'Анонима'}</span>
                         </div>
-                        ${currentUser ? `<button class="btn-vote" onclick="vote('${lot.id}')">+1</button>` : ''}
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <span class="lot-votes">${lot.votes || 0}</span>
+                            ${currentUser ? `<button class="btn-vote" id="vbtn_${lot.id}" onclick="vote('${lot.id}')">+1</button>` : ''}
+                        </div>
                     `;
                     container.appendChild(div);
                 });
-            if (currentUser) checkParticipation();
+            
+            // Скрываем кнопки если уже голосовал
+            if (currentUser) {
+                db.ref('voters/' + currentUser.id).once('value', s => {
+                    if(s.exists()) document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                });
+            }
         });
 
-        function vote(id) {
+        function vote(lotId) {
             if (!currentUser) return;
-            db.ref('voters/' + currentUser.id).set({ name: currentUser.display_name, lot: id });
-            db.ref('lots/' + id).transaction(lot => {
-                if (lot) { lot.votes = (lot.votes || 0) + 1; lot.val = (lot.val || 0) + 1; }
-                return lot;
+            // Двойная проверка перед записью
+            db.ref('voters/' + currentUser.id).once('value', snap => {
+                if (snap.exists()) return alert("Вы уже участвовали!");
+                
+                db.ref('voters/' + currentUser.id).set({ 
+                    name: currentUser.display_name, 
+                    lot: lotId,
+                    type: 'vote'
+                });
+
+                db.ref('lots/' + lotId).transaction(lot => {
+                    if (lot) {
+                        lot.votes = (lot.votes || 0) + 1;
+                        lot.val = (lot.val || 0) + 1;
+                        if(!lot.voters) lot.voters = {};
+                        lot.voters[currentUser.id] = currentUser.display_name;
+                    }
+                    return lot;
+                });
             });
         }
 
@@ -154,17 +237,53 @@
             if (!currentUser) return;
             const input = document.getElementById('newLotName');
             const name = input.value.trim();
-            if (!name) return;
-            const id = Date.now();
-            db.ref('voters/' + currentUser.id).set({ name: currentUser.display_name, created: name });
-            db.ref('lots/' + id).set({ id, name, votes: 1, val: 1, hue: Math.random()*360, active: true, creator: currentUser.display_name });
-            input.value = '';
+            if (!name || name.length < 2) return;
+
+            db.ref('voters/' + currentUser.id).once('value', snap => {
+                if (snap.exists()) return alert("Вы уже предложили лот или проголосовали!");
+
+                const lotId = "lot_" + Date.now();
+                
+                // Записываем в базу лот
+                db.ref('lots/' + lotId).set({
+                    id: lotId,
+                    name: name,
+                    votes: 1,
+                    val: 1,
+                    hue: Math.random()*360,
+                    active: true,
+                    author: currentUser.display_name,
+                    authorId: currentUser.id,
+                    voters: { [currentUser.id]: currentUser.display_name }
+                });
+
+                // Записываем юзеру, что он занят
+                db.ref('voters/' + currentUser.id).set({
+                    name: currentUser.display_name,
+                    created: name,
+                    lotId: lotId
+                });
+
+                input.value = '';
+            });
         }
 
+        // --- ТАЙМЕР ---
         db.ref('auction/timer').on('value', snap => {
             const t = snap.val() || 0;
-            const m = Math.floor(t / 60), s = t % 60;
-            document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`;
+            const h = Math.floor(t / 3600);
+            const m = Math.floor((t % 3600) / 60);
+            const s = t % 60;
+            document.getElementById('timerDisplay').innerText = 
+                `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            
+            // Блокировка ввода, если время вышло
+            db.ref('auction/votingClosed').on('value', lock => {
+                if(lock.val() === true) {
+                    document.getElementById('inputSection').style.display = 'none';
+                    document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                }
+            });
         });
 
         checkAuth();
