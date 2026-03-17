@@ -2,681 +2,837 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - Final Pro Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Auction - Ultimate Admin Panel v2.0</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { 
-            --bg: #0a0a0a; 
-            --panel: #111; 
-            --accent: #00a2ff; 
-            --red: #ff4b4b; 
-            --sidebar-w: 60px; 
-        }
-        
-        body { 
-            margin: 0; 
-            background: var(--bg); 
-            color: #efefef; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
-            background-size: cover; 
-            background-position: center; 
+        /* Базовые переменные и сброс стилей */
+        :root {
+            --bg-dark: #050505;
+            --panel-bg: rgba(15, 15, 15, 0.9);
+            --accent-blue: #00a2ff;
+            --accent-red: #ff4b4b;
+            --text-main: #e0e0e0;
+            --text-dim: #777;
+            --border-color: #222;
+            --sidebar-width: 70px;
+            --transition-speed: 0.3s;
         }
 
-        /* Боковая панель навигации */
-        .sidebar { 
-            width: var(--sidebar-w); 
-            background: #000; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding-top: 20px; 
-            border-right: 1px solid #1a1a1a; 
-            z-index: 100; 
-        }
+        * { box-sizing: border-box; outline: none; }
         
-        .nav-btn { 
-            width: 42px; 
-            height: 42px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            margin-bottom: 15px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            color: #444; 
-            transition: 0.3s; 
-            background: none; 
-            border: none; 
-        }
-        
-        .nav-btn.active { 
-            color: var(--accent); 
-            background: rgba(0, 162, 255, 0.1); 
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-dark) no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .app-content { 
-            flex-grow: 1; 
-            display: flex; 
-            position: relative; 
-            overflow: hidden; 
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+        /* Боковое меню */
+        .main-sidebar {
+            width: var(--sidebar-width);
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 25px 0;
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
         }
 
-        .view-section { 
-            display: none; 
-            width: 100%; 
-            height: 100%; 
-        }
-        
-        .view-section.active { 
-            display: flex; 
-        }
-
-        /* Левая панель со списком лотов для колеса */
-        .lots-panel { 
-            width: 320px; 
-            background: rgba(10,10,10,0.95); 
-            padding: 20px; 
-            border-right: 1px solid #1a1a1a; 
-            transition: transform 0.4s ease; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 50; 
-        }
-        
-        .lots-panel.collapsed { 
-            transform: translateX(-320px); 
-        }
-        
-        .toggle-trigger { 
-            position: absolute; 
-            right: -30px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            background: #1a1a1a; 
-            color: var(--accent); 
-            width: 30px; 
-            height: 60px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            border-radius: 0 8px 8px 0; 
-            border: 1px solid #333; 
-            z-index: 60; 
+        .nav-item {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-radius: 14px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all var(--transition-speed);
+            position: relative;
+            background: transparent;
+            border: none;
         }
 
-        .lot-item { 
-            display: flex; 
-            align-items: center; 
-            padding: 10px; 
-            background: #161616; 
-            border-radius: 6px; 
-            margin-bottom: 6px; 
-            border-left: 3px solid var(--accent); 
-            font-size: 13px; 
-        }
-        
-        .lot-item.out { 
-            opacity: 0.2; 
-            text-decoration: line-through; 
-            filter: grayscale(1); 
+        .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-item.active {
+            color: var(--accent-blue);
+            background: rgba(0, 162, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.2);
         }
 
-        /* Зона самого колеса */
-        .wheel-zone { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            position: relative; 
-        }
-        
-        #simpleStatus { 
-            height: 40px; 
-            font-size: 22px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin-bottom: 10px; 
-            letter-spacing: 1px; 
-        }
-        
-        .marker { 
-            width: 0; 
-            height: 0; 
-            border-left: 15px solid transparent; 
-            border-right: 15px solid transparent; 
-            border-top: 30px solid var(--red); 
-            z-index: 30; 
-            margin-bottom: 5px; 
+        /* Основной контент */
+        .content-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .center-logo-box { 
-            position: absolute; 
-            width: 85px; 
-            height: 85px; 
-            background: #000; 
-            border-radius: 50%; 
-            border: 3px solid #222; 
-            z-index: 40; 
-            display: none; 
-            overflow: hidden; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -10%); 
-            justify-content: center; 
-            align-items: center; 
+        .page-section {
+            display: none;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.4s ease;
         }
 
-        /* Правая панель настроек колеса */
-        .control-panel { 
-            width: 280px; 
-            background: rgba(14,14,14,0.9); 
-            padding: 15px; 
-            border-left: 1px solid #1a1a1a; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Секция Аукциона */
-        .auc-container { 
-            display: grid; 
-            grid-template-columns: 300px 1fr 340px; 
-            gap: 15px; 
-            padding: 20px; 
-            width: 100%; 
-            height: calc(100% - 60px); 
-            box-sizing: border-box; 
-        }
-        
-        .auc-footer { 
-            height: 60px; 
-            background: #000; 
-            border-top: 1px solid #1a1a1a; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 20px; 
-            width: 100%; 
-            position: absolute; 
-            bottom: 0; 
-            box-sizing: border-box; 
+        .page-section.active { display: flex; }
+
+        /* Панель лотов (Слева) */
+        .side-lots-container {
+            width: 350px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 500;
         }
 
-        .timer-input-group { 
-            display: flex; 
-            gap: 5px; 
-            margin-bottom: 10px; 
-        }
-        
-        .timer-input-group input { 
-            width: 100%; 
-            background: #000; 
-            border: 1px solid #333; 
-            color: #fff; 
-            padding: 5px; 
-            text-align: center; 
-            border-radius: 4px; 
+        .side-lots-container.collapsed { transform: translateX(-100%); }
+
+        .panel-header {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* НОВЫЙ ИНТЕРФЕЙС ОНЛАЙНА (Вместо alert) */
-        .online-popup { 
-            position: absolute; 
-            bottom: 75px; 
-            right: 20px; 
-            width: 280px; 
-            background: #0f0f0f; 
-            border: 1px solid #222; 
-            border-radius: 12px; 
-            padding: 15px; 
-            display: none; 
-            flex-direction: column; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-            z-index: 2000; 
-        }
-        
-        .online-popup.active { 
-            display: flex; 
-        }
-        
-        .online-user-row { 
-            font-size: 13px; 
-            padding: 8px 0; 
-            border-bottom: 1px solid #1a1a1a; 
-            display: flex; 
-            justify-content: space-between; 
-            color: #bbb;
+        .lot-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
         }
 
-        /* Стили для бан-листа */
-        .ban-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: #161616; 
-            padding: 12px; 
-            margin-bottom: 8px; 
-            border-radius: 8px; 
-            border-left: 4px solid var(--red); 
+        .lot-card:hover { background: rgba(255,255,255,0.06); }
+        .lot-card.eliminated { opacity: 0.3; filter: grayscale(1); border-left: 3px solid #555; }
+        
+        .lot-card-info { flex: 1; overflow: hidden; }
+        .lot-card-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lot-card-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+        /* Зона Колеса */
+        .wheel-main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 40px;
+        }
+
+        #status-display {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            height: 40px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .wheel-pointer {
+            width: 0; height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 35px solid var(--accent-red);
+            filter: drop-shadow(0 0 10px rgba(255,75,75,0.5));
+            z-index: 100;
+            margin-bottom: -10px;
+        }
+
+        .canvas-container { position: relative; }
+
+        .wheel-center-decoration {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px; height: 90px;
+            background: #000;
+            border: 4px solid #1a1a1a;
+            border-radius: 50%;
+            z-index: 150;
+            display: none;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .wheel-center-decoration img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Контроллы колеса */
+        .wheel-settings-bar {
+            width: 300px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid var(--border-color);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .action-btn-main {
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(255,75,75,0.2);
+        }
+
+        .action-btn-main:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(255,75,75,0.3); }
+        .action-btn-main:active { transform: translateY(0); }
+
+        /* Раздел Аукциона */
+        .auction-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 350px;
+            gap: 20px;
+            padding: 25px;
+            width: 100%;
+            height: calc(100% - 70px);
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .rules-editor {
+            flex: 1;
+            padding: 20px;
+            color: #ccc;
+            line-height: 1.6;
+            font-size: 15px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border: none;
+            resize: none;
+        }
+
+        .admin-lot-row {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            transition: 0.2s;
+        }
+
+        .admin-lot-row:hover { background: rgba(255,255,255,0.02); }
+
+        .row-top { display: flex; align-items: center; justify-content: space-between; }
+        .row-bottom { margin-top: 8px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* Таймер блок */
+        .timer-module {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 56px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            color: var(--accent-blue);
+            margin-bottom: 25px;
+            text-shadow: 0 0 20px rgba(0, 162, 255, 0.3);
+        }
+
+        /* Бан-лист стиль */
+        .ban-card {
+            background: rgba(255, 75, 75, 0.05);
+            border: 1px solid rgba(255, 75, 75, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Футер и онлайн */
+        .admin-footer {
+            height: 70px;
+            background: rgba(0,0,0,0.9);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .online-badge {
+            background: rgba(0, 162, 255, 0.1);
+            color: var(--accent-blue);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--accent-blue);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .popup-online {
+            position: absolute;
+            bottom: 85px; right: 30px;
+            width: 300px;
+            max-height: 400px;
+            background: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            z-index: 2000;
         }
         
-        .unban-btn { 
-            background: var(--red); 
-            color: white; 
-            border: none; 
-            padding: 6px 12px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-size: 11px; 
-            font-weight: bold;
-        }
+        .popup-online.active { display: flex; }
     </style>
 </head>
-<body id="mainBody">
+<body id="main-body-el">
 
-    <aside class="sidebar">
-        <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-home"></i></button>
-        <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-envelope"></i></button>
-        <button class="nav-btn" onclick="setView('vip', this)"><i class="fas fa-user-slash"></i></button>
-        <button class="nav-btn" style="margin-top: auto; margin-bottom: 20px;" onclick="alert('Настройки в разработке')"><i class="fas fa-cog"></i></button>
-    </aside>
+    <nav class="main-sidebar">
+        <button class="nav-item active" onclick="switchTab('wheel', this)" title="Рулетка">
+            <i class="fas fa-dharmachakra fa-lg"></i>
+        </button>
+        <button class="nav-item" onclick="switchTab('auc', this)" title="Аукцион">
+            <i class="fas fa- gavel fa-lg"></i>
+        </button>
+        <button class="nav-item" onclick="switchTab('ban', this)" title="Баны">
+            <i class="fas fa-user-slash fa-lg"></i>
+        </button>
+        <div style="flex: 1;"></div>
+        <button class="nav-item" onclick="document.getElementById('bg-input').click()" title="Сменить фон">
+            <i class="fas fa-image"></i>
+        </button>
+    </nav>
 
-    <main class="app-content">
+    <main class="content-wrapper">
         
-        <section id="view-wheel" class="view-section active">
-            <div class="lots-panel" id="sidePanel">
-                <div class="toggle-trigger" onclick="toggleSide()"><i class="fas fa-chevron-left" id="sideIcon"></i></div>
-                <div style="font-size: 10px; color: #444; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;">СПИСОК УЧАСТНИКОВ</div>
-                <label style="font-size: 11px; color: #666; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
-                    <input type="checkbox" id="hideOut" onchange="renderAll()"> Скрыть выбывшие
-                </label>
-                <div id="wheelList" style="flex: 1; overflow-y: auto;"></div>
+        <section id="section-wheel" class="page-section active">
+            <div class="side-lots-container" id="left-panel">
+                <div class="panel-header">
+                    <span>УЧАСТНИКИ</span>
+                    <i class="fas fa-angle-left" style="cursor:pointer;" onclick="toggleLeftPanel()"></i>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 11px; display: flex; align-items: center; gap: 10px; color: var(--text-dim);">
+                        <input type="checkbox" id="filter-out" onchange="refreshDisplays()"> СКРЫТЬ ВЫБЫВШИХ
+                    </label>
+                </div>
+                <div id="wheel-list-render" style="flex:1; overflow-y:auto;">
+                    </div>
             </div>
 
-            <div class="wheel-zone">
-                <div id="simpleStatus"></div>
-                <div class="marker"></div>
-                <div class="center-logo-box" id="logoBox"><img id="logoImg" src="" alt=""></div>
-                <canvas id="wheelCanvas" width="550" height="550"></canvas>
+            <div class="wheel-main-area">
+                <div id="status-display"></div>
+                <div class="wheel-pointer"></div>
+                <div class="canvas-container">
+                    <div class="wheel-center-decoration" id="wheel-logo-box">
+                        <img id="wheel-logo-img" src="" alt="">
+                    </div>
+                    <canvas id="main-canvas" width="600" height="600"></canvas>
+                </div>
             </div>
 
-            <div class="control-panel">
-                <button class="btn-spin" onclick="startSpin()" style="background: var(--red); border: none; color: #fff; padding: 18px; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 16px;">КРУТИТЬ</button>
-                <div style="font-size: 10px; color: #333; margin-top: 5px;">ВРЕМЯ АНИМАЦИИ (СЕК)</div>
-                <input type="number" id="spinTime" style="background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:6px;" value="5">
+            <div class="wheel-settings-bar">
+                <button class="action-btn-main" onclick="executeSpin()">КРУТИТЬ</button>
                 
-                <div style="font-size: 10px; color: #333; margin-top: 10px;">ДИЗАЙН КОЛЕСА</div>
-                <div style="display: flex; gap: 5px;">
-                    <button id="tNew" class="nav-btn active" style="flex:1; font-size:11px;" onclick="setWType('new')">Новое</button>
-                    <button id="tClass" class="nav-btn" style="flex:1; font-size:11px;" onclick="setWType('class')">Классика</button>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 10px; color: var(--text-dim);">АНИМАЦИЯ (СЕК)</label>
+                    <input type="number" id="cfg-spin-time" value="7" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:8px; margin-top:5px;">
                 </div>
-                
-                <div style="display: flex; gap: 5px;">
-                    <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fBg').click()">ФОН</button>
-                    <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
+
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 10px; color: var(--text-dim);">ВИЗУАЛ</label>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button onclick="changeWheelUI('modern')" id="ui-mod" class="nav-item active" style="flex:1; font-size:10px;">MODERN</button>
+                        <button onclick="changeWheelUI('classic')" id="ui-cla" class="nav-item" style="flex:1; font-size:10px;">CLASSIC</button>
+                    </div>
                 </div>
-                <button onclick="clearDB()" style="margin-top:auto; background:none; border:1px solid #222; color:#444; padding:12px; border-radius:8px; cursor:pointer; font-size:11px; font-weight: bold;">ОЧИСТИТЬ ВСЕ ДАННЫЕ</button>
+
+                <button class="nav-item" style="width:100%; border:1px solid #333; margin-top:10px;" onclick="document.getElementById('logo-input').click()">СМЕНИТЬ ЛОГО</button>
             </div>
         </section>
 
-        <section id="view-auc" class="view-section" style="flex-direction:column;">
-            <div class="auc-container">
-                <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
-                    <h3 style="margin-top:0; color: var(--accent);">Правила</h3>
-                    <div id="rulesArea" contenteditable="true" style="color:#bbb; min-height:150px; outline:none; font-size: 14px; line-height: 1.5;" oninput="saveRules()">Напишите правила здесь...</div>
+        <section id="section-auc" class="page-section">
+            <div class="auction-grid">
+                <div class="glass-panel">
+                    <div style="padding:15px; border-bottom:1px solid #222; font-weight:bold; color:var(--accent-blue);">ПРАВИЛА</div>
+                    <textarea id="rules-input" class="rules-editor" placeholder="Введите правила..." oninput="syncRules()"></textarea>
                 </div>
 
-                <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column; overflow:hidden;">
-                    <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222; background: #161616;">
-                        <input type="text" id="aName" placeholder="Название лота..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:5px;">
-                        <input type="number" id="aVal" value="1" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:5px;">
-                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 20px; border-radius:5px; cursor:pointer;"><i class="fas fa-plus"></i></button>
+                <div class="glass-panel">
+                    <div style="padding:15px; background: rgba(0,0,0,0.3); display:flex; gap:10px;">
+                        <input type="text" id="new-lot-name" placeholder="Название..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:8px;">
+                        <input type="number" id="new-lot-val" value="500" style="width:80px; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:8px;">
+                        <button onclick="manualAddLot()" style="background:var(--accent-blue); border:none; color:white; padding:0 20px; border-radius:8px; cursor:pointer;">
+                            <i class="fas fa-plus"></i>
+                        </button>
                     </div>
-                    <div id="aucList" style="flex:1; overflow-y:auto;"></div>
-                </div>
-
-                <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:48px; font-weight:bold; margin-bottom:20px; font-family: 'Courier New', monospace; color: var(--accent);">00:10:00</div>
-                    
-                    <div class="timer-input-group">
-                        <input type="number" id="tDays" placeholder="Дни" value="0">
-                        <input type="number" id="tHours" placeholder="Часы" value="0">
-                        <input type="number" id="tMins" placeholder="Мин" value="10">
-                    </div>
-                    <button onclick="applyTimer()" style="width:100%; background:#222; border:none; color:#aaa; padding:8px; margin-bottom:20px; border-radius:6px; font-size:11px; cursor:pointer; font-weight: bold;">УСТАНОВИТЬ ВРЕМЯ</button>
-
-                    <label style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:20px; font-size:12px; color:var(--red); cursor:pointer; font-weight: bold;">
-                        <input type="checkbox" id="lockVoting" onchange="updateLock()"> Блокировать при 00:00
-                    </label>
-
-                    <div style="display:flex; justify-content:center; gap:25px; font-size:28px; color:#555;">
-                        <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer; transition: 0.2s;"></i>
-                        <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
-                        <i class="fas fa-plus-circle" onclick="tMod(60)" style="cursor:pointer; font-size: 20px;"></i>
-                        <i class="fas fa-minus-circle" onclick="tMod(-60)" style="cursor:pointer; font-size: 20px;"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="auc-footer">
-                <div>
-                    <button class="nav-btn" onclick="clearDB()" title="Очистить всё"><i class="fas fa-trash"></i></button>
-                    <button class="nav-btn active" id="pBtn" onclick="togglePct()" title="Показать проценты"><i class="fas fa-percent"></i></button>
-                </div>
-
-                <div id="onlinePopup" class="online-popup">
-                    <div style="font-weight: bold; font-size: 11px; color: var(--accent); margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px; letter-spacing: 1px;">ЗРИТЕЛИ В СЕТИ</div>
-                    <div id="onlineListItems" style="max-height: 250px; overflow-y: auto;">
+                    <div id="admin-auc-list" style="flex:1; overflow-y:auto;">
                         </div>
                 </div>
 
-                <div id="onlineCounter" onclick="toggleOnlineList(event)" style="cursor:pointer; background:rgba(0,162,255,0.1); padding:8px 20px; border-radius:30px; border:1px solid var(--accent); transition: 0.3s;">
-                    <i class="fas fa-users" style="color:var(--accent);"></i> <span id="onlineCount" style="font-weight: bold; margin-left: 5px;">0</span>
+                <div class="glass-panel timer-module">
+                    <div id="timer-text" class="timer-display">00:10:00</div>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <input type="number" id="set-mins" placeholder="Минуты" value="10" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:6px; text-align:center;">
+                    </div>
+                    <button onclick="setTimerValue()" style="width:100%; background:#222; color:#888; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:15px;">ПРИМЕНИТЬ ВРЕМЯ</button>
+                    
+                    <label style="display:flex; align-items:center; justify-content:center; gap:10px; font-size:12px; color:var(--accent-red); margin-bottom:25px; cursor:pointer;">
+                        <input type="checkbox" id="chk-lock" onchange="syncLockSettings()"> БЛОКИРОВАТЬ ПРИ 00:00
+                    </label>
+
+                    <div style="display:flex; justify-content:center; gap:40px;">
+                        <i id="btn-timer-toggle" class="fas fa-play fa-2x" onclick="controlTimer('toggle')" style="cursor:pointer; color:#fff;"></i>
+                        <i class="fas fa-undo-alt fa-2x" onclick="controlTimer('reset')" style="cursor:pointer; color:var(--text-dim);"></i>
+                    </div>
                 </div>
             </div>
+
+            <footer class="admin-footer">
+                <button class="nav-item" style="color:var(--accent-red);" onclick="factoryReset()" title="ПОЛНЫЙ СБРОС">
+                    <i class="fas fa-bomb fa-lg"></i>
+                </button>
+
+                <div class="popup-online" id="online-modal">
+                    <div style="font-weight:900; color:var(--accent-blue); margin-bottom:15px; border-bottom:1px solid #222; padding-bottom:10px;">ЗРИТЕЛИ ОНЛАЙН</div>
+                    <div id="online-users-container" style="overflow-y:auto;"></div>
+                </div>
+
+                <div class="online-badge" onclick="toggleOnlineModal(event)">
+                    <i class="fas fa-circle" style="font-size:8px;"></i>
+                    ОНЛАЙН: <span id="count-online">0</span>
+                </div>
+            </footer>
         </section>
 
-        <section id="view-vip" class="view-section" style="flex-direction:column; padding:40px;">
-            <h2 style="color:var(--red); margin-bottom:30px;"><i class="fas fa-user-slash"></i> ЧЕРНЫЙ СПИСОК (БАНЫ)</h2>
-            <div id="banList" style="max-width: 700px; overflow-y: auto;">
+        <section id="section-ban" class="page-section" style="padding:50px; flex-direction:column;">
+            <h1 style="color:var(--accent-red); margin-bottom:30px;"><i class="fas fa-ban"></i> ЧЕРНЫЙ СПИСОК</h1>
+            <div id="render-ban-list" style="max-width:800px; width:100%;">
                 </div>
         </section>
 
-        <input type="file" id="fBg" hidden onchange="up(this,'bg')">
-        <input type="file" id="fLogo" hidden onchange="up(this,'logo')">
+        <input type="file" id="bg-input" hidden onchange="handleFileUpload(this, 'bg')">
+        <input type="file" id="logo-input" hidden onchange="handleFileUpload(this, 'logo')">
     </main>
 
     <script>
-        // Инициализация Firebase
-        const firebaseConfig = { 
-            apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
-            databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
+        /* CONFIG & INITIALIZATION */
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc",
+            databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
-        let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'new';
-        let tSec = 600, tInt = null;
-        let onlineUsers = {};
+        let appData = {
+            lots: [],
+            isSpinning: false,
+            rotation: 0,
+            timer: 600,
+            uiType: 'modern'
+        };
 
-        // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
-        function setView(id, b) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active'); 
-            b.classList.add('active');
+        let timerInterval = null;
+
+        /* NAVIGATION SYSTEM */
+        function switchTab(id, btn) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('section-' + id).classList.add('active');
+            btn.classList.add('active');
         }
 
-        // СКРЫТИЕ ПАНЕЛИ
-        function toggleSide() {
-            const p = document.getElementById('sidePanel');
-            const icon = document.getElementById('sideIcon');
-            p.classList.toggle('collapsed');
-            icon.className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
+        function toggleLeftPanel() {
+            document.getElementById('left-panel').classList.toggle('collapsed');
         }
 
-        // СЛУШАТЕЛИ FIREBASE
-        db.ref('lots').on('value', s => { 
-            const val = s.val();
-            data = val ? Object.entries(val) : []; 
-            renderAll(); 
+        /* FIREBASE SYNC */
+        db.ref('lots').on('value', snap => {
+            const raw = snap.val();
+            appData.lots = raw ? Object.entries(raw) : [];
+            refreshDisplays();
         });
 
-        db.ref('bans').on('value', s => {
-            const list = document.getElementById('banList');
-            const bans = s.val() || {};
-            list.innerHTML = '';
-            Object.entries(bans).forEach(([uid, name]) => {
-                list.innerHTML += `
-                    <div class="ban-item">
-                        <span><i class="fas fa-user" style="margin-right:10px; color:#555;"></i> <b>${name}</b> <small style="color:#444; margin-left:10px;">ID: ${uid}</small></span>
-                        <button class="unban-btn" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
-                    </div>`;
-            });
+        db.ref('auction/rules').on('value', snap => {
+            if(snap.val() !== null) document.getElementById('rules-input').value = snap.val();
         });
 
-        db.ref('presence').on('value', s => {
-            onlineUsers = s.val() || {};
-            const userArr = Object.values(onlineUsers);
-            document.getElementById('onlineCount').innerText = userArr.length;
+        db.ref('presence').on('value', snap => {
+            const users = snap.val() || {};
+            const userArr = Object.values(users);
+            document.getElementById('count-online').innerText = userArr.length;
             
-            const items = document.getElementById('onlineListItems');
-            items.innerHTML = userArr.map(u => `
-                <div class="online-user-row">
+            const container = document.getElementById('online-users-container');
+            container.innerHTML = userArr.map(u => `
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1a1a1a; font-size:13px;">
                     <span>${u.name || 'Аноним'}</span>
-                    <span style="color: #00ff00; font-size: 8px;"><i class="fas fa-circle"></i></span>
+                    <span style="color:var(--text-dim); font-size:10px;">ID: ${u.uid?.substring(0,6) || '???'}</span>
                 </div>
             `).join('');
         });
 
-        // УПРАВЛЕНИЕ ОНЛАЙН-ОКНОМ
-        function toggleOnlineList(e) {
-            e.stopPropagation();
-            document.getElementById('onlinePopup').classList.toggle('active');
+        db.ref('bans').on('value', snap => {
+            const bans = snap.val() || {};
+            const container = document.getElementById('render-ban-list');
+            container.innerHTML = '';
+            Object.entries(bans).forEach(([uid, name]) => {
+                container.innerHTML += `
+                    <div class="ban-card">
+                        <div>
+                            <div style="font-weight:bold;">${name}</div>
+                            <div style="font-size:11px; color:var(--text-dim);">UID: ${uid}</div>
+                        </div>
+                        <button onclick="liftBan('${uid}')" style="background:var(--accent-red); border:none; color:white; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">РАЗБАНИТЬ</button>
+                    </div>`;
+            });
+        });
+
+        /* CORE FUNCTIONS */
+        function syncRules() {
+            db.ref('auction/rules').set(document.getElementById('rules-input').value);
         }
-        window.onclick = () => document.getElementById('onlinePopup').classList.remove('active');
 
-        // СОХРАНЕНИЕ НАСТРОЕК
-        function saveRules() { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }
-        function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
+        function syncLockSettings() {
+            db.ref('auction/lockSettings').set(document.getElementById('chk-lock').checked);
+        }
 
-        // БАН ПОЛЬЗОВАТЕЛЯ
-        function banUser(uid, name) {
-            if(!uid || uid === 'admin') {
-                alert("Этого пользователя нельзя забанить");
-                return;
+        function liftBan(uid) {
+            if(confirm("Снять бан с этого пользователя?")) {
+                db.ref('bans/' + uid).remove();
             }
-            if(confirm(`Заблокировать доступ для ${name}?`)) {
+        }
+
+        function applyBan(uid, name) {
+            if(!uid || uid === 'admin') return alert("Этого пользователя нельзя забанить");
+            if(confirm(`ЗАБАНИТЬ ${name} навсегда?`)) {
                 db.ref('bans/' + uid).set(name);
             }
         }
 
-        // РЕНДЕР ВСЕХ СПИСКОВ
-        function renderAll() {
-            const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
-            wl.innerHTML = ''; al.innerHTML = '';
+        function refreshDisplays() {
+            const wList = document.getElementById('wheel-list-render');
+            const aList = document.getElementById('admin-auc-list');
+            const hideOut = document.getElementById('filter-out').checked;
             
-            const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
+            wList.innerHTML = ''; aList.innerHTML = '';
+            
+            const activeLots = appData.lots.filter(([id, d]) => d.active !== false);
+            const totalScore = activeLots.reduce((acc, [id, d]) => acc + (d.votes || d.val || 0), 0);
 
-            data.forEach(([id, d], i) => {
+            appData.lots.forEach(([id, d]) => {
                 const isOut = d.active === false;
-                const currentVotes = d.votes || d.val || 0;
-                const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
-                
-                // Список для колеса
-                if(!(isOut && hide)) {
-                    wl.innerHTML += `
-                        <div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
-                            <span style="flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${d.name}</span>
-                            ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
-                            <b>${currentVotes}</b>
+                const score = d.votes || d.val || 0;
+                const pct = totalScore > 0 ? ((score/totalScore)*100).toFixed(1) : 0;
+
+                // Рендер для рулетки
+                if(!(isOut && hideOut)) {
+                    wList.innerHTML += `
+                        <div class="lot-card ${isOut ? 'eliminated' : ''}" style="border-left: 4px solid hsl(${d.hue}, 70%, 50%)">
+                            <div class="lot-card-info">
+                                <div class="lot-card-name">${d.name}</div>
+                                <div class="lot-card-meta">${pct}% | ${score} монеток</div>
+                            </div>
                         </div>`;
                 }
 
-                // Список для аукциона (админский)
-                al.innerHTML += `
-                    <div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; background: ${isOut ? '#0d0d0d' : 'transparent'}">
-                        <div style="display:flex; align-items:center;">
-                            <span style="width:25px; color:#333; font-size:11px;">${i+1}</span>
-                            <span style="flex:1; font-weight:bold; color:${isOut ? '#444' : '#efefef'}">${d.name}</span>
-                            <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                            <span style="margin-right:20px; font-weight:bold;">${currentVotes} <i class="fas fa-coins" style="font-size:10px; color:#555;"></i></span>
-                            
-                            <i class="fas fa-user-slash" title="Забанить автора" 
-                               style="cursor:pointer; color:var(--red); margin-right:15px; opacity: 0.5;" 
-                               onclick="banUser('${d.uid}', '${d.author}')"></i>
-                               
-                            <i class="fas fa-trash" style="cursor:pointer; color:#333;" onclick="db.ref('lots/${id}').remove()"></i>
+                // Рендер для админки
+                aList.innerHTML += `
+                    <div class="admin-lot-row" style="background: ${isOut ? 'rgba(255,0,0,0.03)' : 'transparent'}">
+                        <div class="row-top">
+                            <span style="font-weight:bold; ${isOut ? 'text-decoration:line-through; color:#555' : ''}">${d.name}</span>
+                            <div style="display:flex; gap:15px; align-items:center;">
+                                <b style="color:var(--accent-blue);">${pct}%</b>
+                                <b>${score} <i class="fas fa-coins" style="font-size:10px;"></i></b>
+                                <i class="fas fa-user-slash" style="color:var(--accent-red); cursor:pointer;" onclick="applyBan('${d.uid}', '${d.author}')" title="ЗАБАНИТЬ АВТОРА"></i>
+                                <i class="fas fa-trash-alt" style="color:#333; cursor:pointer;" onclick="deleteLot('${id}')"></i>
+                            </div>
                         </div>
-                        <div style="font-size:10px; color:#444; padding-left:25px; margin-top:4px;">
-                            Автор: <span style="color:#666">${d.author || 'Админ'}</span> | ID: <span style="color:#444">${d.uid || '---'}</span>
+                        <div class="row-bottom">
+                            <span style="font-size:11px; color:var(--text-dim);">Автор: ${d.author || 'Админ'} (${d.uid || '---'})</span>
+                            <button onclick="showLotDetails('${id}')" style="background:none; border:1px solid #333; color:#555; font-size:9px; padding:2px 6px; border-radius:4px; cursor:pointer;">КТО ВЫБИЛ?</button>
                         </div>
                     </div>`;
             });
-            drawWheel();
+            drawWheelCanvas();
         }
 
-        // ТАЙМЕР ЛОГИКА
-        function applyTimer() {
-            const d = parseInt(document.getElementById('tDays').value) || 0;
-            const h = parseInt(document.getElementById('tHours').value) || 0;
-            const m = parseInt(document.getElementById('tMins').value) || 0;
-            tSec = (d * 86400) + (h * 3600) + (m * 60);
-            tUpdate();
-        }
-
-        function tUpdate() { 
-            const d = Math.floor(tSec / 86400);
-            const h = Math.floor((tSec % 86400) / 3600);
-            const m = Math.floor((tSec % 3600) / 60);
-            const s = tSec % 60;
-            
-            let str = (d > 0 ? d+"д " : "") + `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            document.getElementById('tDisp').innerText = str; 
-            
-            db.ref('auction').update({ timer: tSec, pass: PASS });
-            db.ref('auction/votingClosed').set(tSec <= 0 && document.getElementById('lockVoting').checked);
-        }
-
-        function tToggle() { 
-            const b = document.getElementById('tPlay'); 
-            if(tInt) {
-                clearInterval(tInt); 
-                tInt = null; 
-                b.className = "fas fa-play";
+        function showLotDetails(id) {
+            const target = appData.lots.find(x => x[0] === id);
+            if(target && target[1].donators) {
+                const names = Object.values(target[1].donators).join('\n- ');
+                alert("Список тех, кто кидал на этот лот:\n- " + names);
             } else {
-                tInt = setInterval(() => {
-                    if(tSec > 0) { tSec--; tUpdate(); } 
-                    else { clearInterval(tInt); tInt = null; b.className = "fas fa-play"; }
-                }, 1000); 
-                b.className = "fas fa-pause";
-            } 
+                alert("Информации о донаторах нет.");
+            }
         }
 
-        function tMod(v) { tSec = Math.max(0, tSec + v); tUpdate(); }
-        function tReset() { tSec = 600; tUpdate(); }
-
-        // КОЛЕСО ЛОГИКА
-        function setWType(t) { 
-            wType = t; 
-            document.getElementById('tNew').classList.toggle('active', t==='new'); 
-            document.getElementById('tClass').classList.toggle('active', t==='class'); 
-            drawWheel(); 
-        }
-
-        function togglePct() { 
-            showPct = !showPct; 
-            document.getElementById('pBtn').classList.toggle('active'); 
-            renderAll(); 
-        }
-
-        function drawWheel() {
-            const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
-            ctx.clearRect(0,0,550,550);
-            const active = data.filter(([id,d]) => d.active !== false);
+        /* WHEEL ENGINE (FULL) */
+        function drawWheelCanvas() {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,600,600);
+            
+            const active = appData.lots.filter(([id, d]) => d.active !== false);
             if(!active.length) return;
-            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
-            let curr = rotation;
-            active.forEach(([id, d], i) => {
-                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
-                ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
-                ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
-                if(wType === 'class') {
-                    ctx.fillStyle = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-                    ctx.strokeStyle = `hsl(${d.hue},70%,50%)`; ctx.lineWidth = 2; ctx.stroke();
+            
+            const total = active.reduce((acc, [id, d]) => acc + (d.votes || d.val || 0), 0);
+            let currentOffset = appData.rotation;
+
+            active.forEach(([id, d], index) => {
+                const sliceAngle = ((d.votes || d.val || 0) / total) * (Math.PI * 2);
+                
+                ctx.save();
+                ctx.translate(300, 300);
+                ctx.rotate(currentOffset);
+                
+                // Рисуем сектор
+                ctx.beginPath();
+                ctx.moveTo(0,0);
+                ctx.arc(0, 0, 280, 0, sliceAngle);
+                
+                if(appData.uiType === 'modern') {
+                    ctx.fillStyle = `hsl(${d.hue}, 65%, 45%)`;
                 } else {
-                    ctx.fillStyle = `hsl(${d.hue},65%,45%)`;
+                    ctx.fillStyle = index % 2 === 0 ? '#111' : '#222';
+                    ctx.strokeStyle = `hsl(${d.hue}, 70%, 50%)`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
                 }
                 ctx.fill();
-                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
-                ctx.fillText(d.name.length > 18 ? d.name.substring(0,16)+'..' : d.name, 240, 5);
+
+                // Текст
+                ctx.rotate(sliceAngle / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 15px Inter";
+                ctx.textAlign = "right";
+                let displayName = d.name.length > 25 ? d.name.substring(0, 22) + "..." : d.name;
+                ctx.fillText(displayName, 260, 5);
+                
                 ctx.restore();
-                curr += slice;
+                currentOffset += sliceAngle;
             });
         }
 
-        function startSpin() {
-            const active = data.filter(([id,d]) => d.active !== false);
-            if(isSpinning || active.length < 2) return;
-            isSpinning = true;
-            document.getElementById('simpleStatus').innerText = '';
-            const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 35 + Math.random()*40, sRot = rotation;
-            function anim(now) {
-                const p = Math.min((now-start)/dur, 1), ease = 1 - Math.pow(1-p, 4);
-                rotation = sRot + pwr * ease; drawWheel();
-                if(p < 1) requestAnimationFrame(anim);
-                else { 
-                    isSpinning = false; 
-                    const win = getWin(); 
-                    if(win) { updateStatus(win.name, active.length === 2); db.ref('lots/'+win.id).update({active: false}); } 
+        function executeSpin() {
+            if(appData.isSpinning) return;
+            const active = appData.lots.filter(([id, d]) => d.active !== false);
+            if(active.length < 2) return alert("Нужно минимум 2 активных лота!");
+
+            appData.isSpinning = true;
+            document.getElementById('status-display').innerText = "";
+            
+            const spinDuration = (parseInt(document.getElementById('cfg-spin-time').value) || 7) * 1000;
+            const startTime = performance.now();
+            const startRotation = appData.rotation;
+            const extraSpins = 30 + Math.random() * 40; // Сила вращения
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDuration, 1);
+                
+                // Функция замедления (Ease Out Quart)
+                const easing = 1 - Math.pow(1 - progress, 4);
+                
+                appData.rotation = startRotation + (extraSpins * easing);
+                drawWheelCanvas();
+
+                if(progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    appData.isSpinning = false;
+                    resolveWinner(active);
                 }
             }
-            requestAnimationFrame(anim);
+            requestAnimationFrame(animate);
         }
 
-        function getWin() {
-            const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
-            const target = (Math.PI*1.5 - (rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
-            let cur = 0;
-            for(const [id, d] of active) {
-                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
-                if(target >= cur && target < cur + slice) return {id, name: d.name};
-                cur += slice;
+        function resolveWinner(activeArray) {
+            const total = activeArray.reduce((acc, [id, d]) => acc + (d.votes || d.val || 0), 0);
+            const normalizedRotation = (Math.PI * 1.5 - (appData.rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+            
+            let accumulatedAngle = 0;
+            let winner = null;
+
+            for(const [id, d] of activeArray) {
+                const sliceAngle = ((d.votes || d.val || 0) / total) * (Math.PI * 2);
+                if(normalizedRotation >= accumulatedAngle && normalizedRotation < accumulatedAngle + sliceAngle) {
+                    winner = { id, name: d.name };
+                    break;
+                }
+                accumulatedAngle += sliceAngle;
+            }
+
+            if(winner) {
+                const status = document.getElementById('status-display');
+                if(activeArray.length === 2) {
+                    // Последний раунд - определяем кто победил
+                    const realWinner = activeArray.find(x => x[0] !== winner.id);
+                    status.innerText = "🏆 ПОБЕДИТЕЛЬ: " + realWinner[1].name;
+                    status.style.color = "var(--accent-blue)";
+                } else {
+                    status.innerText = "❌ ВЫБЫВАЕТ: " + winner.name;
+                    status.style.color = "var(--accent-red)";
+                }
+                // Помечаем в базе как выбывший
+                db.ref('lots/' + winner.id).update({ active: false });
             }
         }
 
-        function updateStatus(name, isFinal) {
-            const st = document.getElementById('simpleStatus');
-            if(isFinal) {
-                const winnerObj = data.filter(([id,d]) => d.active !== false && d.name !== name)[0];
-                st.style.color = "var(--accent)"; st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + (winnerObj ? winnerObj[1].name : name);
-            } else { 
-                st.style.color = "var(--red)"; st.innerText = "❌ ВЫБЫЛ: " + name; 
+        /* TIMER SYSTEM (FULL) */
+        function setTimerValue() {
+            const mins = parseInt(document.getElementById('set-mins').value) || 0;
+            appData.timer = mins * 60;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(appData.timer / 60);
+            const s = appData.timer % 60;
+            const str = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            document.getElementById('timer-text').innerText = str;
+            db.ref('auction/timer').set(appData.timer);
+        }
+
+        function controlTimer(action) {
+            const btn = document.getElementById('btn-timer-toggle');
+            if(action === 'toggle') {
+                if(timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    btn.className = "fas fa-play fa-2x";
+                } else {
+                    timerInterval = setInterval(() => {
+                        if(appData.timer > 0) {
+                            appData.timer--;
+                            updateTimerDisplay();
+                        } else {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            btn.className = "fas fa-play fa-2x";
+                        }
+                    }, 1000);
+                    btn.className = "fas fa-pause fa-2x";
+                }
+            } else if(action === 'reset') {
+                appData.timer = 600;
+                updateTimerDisplay();
             }
-            setTimeout(() => st.innerText = '', 4500);
         }
 
-        function addLot() { 
-            const n = document.getElementById('aName').value, v = parseInt(document.getElementById('aVal').value) || 1; 
-            if(n) { 
-                const id = Date.now(); 
-                db.ref('lots/' + id).set({ id, name: n, votes: v, val: v, hue: Math.random()*360, active: true, author: 'Admin', uid: 'admin' }); 
+        /* UTILITIES */
+        function manualAddLot() {
+            const name = document.getElementById('new-lot-name').value;
+            const val = parseInt(document.getElementById('new-lot-val').value) || 1;
+            if(!name) return;
+            
+            const id = Date.now();
+            db.ref('lots/' + id).set({
+                id: id,
+                name: name,
+                val: val,
+                votes: val,
+                hue: Math.random() * 360,
+                active: true,
+                author: 'Admin',
+                uid: 'admin'
+            });
+            document.getElementById('new-lot-name').value = '';
+        }
+
+        function deleteLot(id) {
+            if(confirm("Удалить этот лот?")) db.ref('lots/' + id).remove();
+        }
+
+        function handleFileUpload(input, type) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'bg') {
+                        document.getElementById('main-body-el').style.backgroundImage = `url(${e.target.result})`;
+                    } else {
+                        document.getElementById('wheel-logo-img').src = e.target.result;
+                        document.getElementById('wheel-logo-box').style.display = 'flex';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
             }
-            document.getElementById('aName').value = '';
         }
 
-        function clearDB() { 
-            if(confirm("ВНИМАНИЕ! Это удалит ВСЕ лоты и очистит базу. Продолжить?")) {
-                db.ref('lots').remove();
-                db.ref('auction').update({ timer: 600, pass: PASS, rules: "Правила очищены." });
-            } 
+        function toggleOnlineModal(e) {
+            e.stopPropagation();
+            document.getElementById('online-modal').classList.toggle('active');
         }
 
-        function up(i, t) { 
-            if(i.files[0]) { 
-                const r = new FileReader(); 
-                r.onload = e => { 
-                    if(t==='bg') document.getElementById('mainBody').style.backgroundImage = `url(${e.target.result})`; 
-                    else { 
-                        document.getElementById('logoImg').src = e.target.result; 
-                        document.getElementById('logoBox').style.display = 'flex'; 
-                    } 
-                }; 
-                r.readAsDataURL(i.files[0]); 
-            } 
+        function changeWheelUI(type) {
+            appData.uiType = type;
+            document.getElementById('ui-mod').classList.toggle('active', type==='modern');
+            document.getElementById('ui-cla').classList.toggle('active', type==='classic');
+            drawWheelCanvas();
         }
-        
-        tUpdate();
+
+        function factoryReset() {
+            if(confirm("ТЫ УВЕРЕН? ВСЕ ЛОТЫ И ДАННЫЕ БУДУТ УДАЛЕНЫ!")) {
+                db.ref('/').remove();
+                location.reload();
+            }
+        }
+
+        window.onclick = function() {
+            document.getElementById('online-modal').classList.remove('active');
+        };
+
+        // Старт
+        updateTimerDisplay();
     </script>
 </body>
 </html>
