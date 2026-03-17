@@ -24,19 +24,23 @@
         #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
         .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
         
-        /* ИСПРАВЛЕННЫЙ CSS ДЛЯ ЛОГОТИПА */
         .center-logo-box { 
             position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; 
             border: 3px solid #222; z-index: 40; display: none; overflow: hidden; 
-            top: 50%; left: 50%; transform: translate(-50%, -10%); /* -10% учитывает маркер сверху */
-            justify-content: center; align-items: center; /* Центрируем картинку внутри круга */
+            top: 50%; left: 50%; transform: translate(-50%, -10%);
+            justify-content: center; align-items: center; 
         }
         .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
         .control-panel { width: 280px; background: rgba(14,14,14,0.9); padding: 15px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; }
         .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
-        .auc-container { display: grid; grid-template-columns: 300px 1fr 300px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
-        .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; position: absolute; bottom: 0; }
+        .auc-container { display: grid; grid-template-columns: 300px 1fr 340px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
+        .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; width: 100%; position: absolute; bottom: 0; box-sizing: border-box; }
+        
+        .timer-input-group { display: flex; gap: 5px; margin-bottom: 10px; }
+        .timer-input-group input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 5px; text-align: center; border-radius: 4px; }
+        
+        .voters-list { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
     </style>
 </head>
 <body id="mainBody">
@@ -89,8 +93,9 @@
             <div class="auc-container">
                 <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
                     <h3>Правила</h3>
-                    <div contenteditable="true" style="color:#555;">Текст правил...</div>
+                    <div id="rulesArea" contenteditable="true" style="color:#efefef; min-height:100px; outline:none;" oninput="saveRules()">Текст правил...</div>
                 </div>
+
                 <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
                     <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
                         <input type="text" id="aName" placeholder="Лот..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
@@ -99,8 +104,21 @@
                     </div>
                     <div id="aucList" style="flex:1; overflow-y:auto;"></div>
                 </div>
-                <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content;">
-                    <div id="tDisp" style="font-size:44px; font-weight:bold; margin-bottom:15px;">10:00:00</div>
+
+                <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
+                    <div id="tDisp" style="font-size:44px; font-weight:bold; margin-bottom:15px; font-family: monospace;">00:10:00</div>
+                    
+                    <div class="timer-input-group">
+                        <input type="number" id="tDays" placeholder="Дни" value="0">
+                        <input type="number" id="tHours" placeholder="Часы" value="0">
+                        <input type="number" id="tMins" placeholder="Мин" value="10">
+                    </div>
+                    <button onclick="applyTimer()" style="width:100%; background:#222; border:none; color:#aaa; padding:5px; margin-bottom:15px; border-radius:4px; font-size:11px; cursor:pointer;">ПРИМЕНИТЬ ВРЕМЯ</button>
+
+                    <label style="display:block; margin-bottom:15px; font-size:12px; color:var(--red); cursor:pointer;">
+                        <input type="checkbox" id="lockVoting" onchange="updateLock()"> Блокировать по окончанию
+                    </label>
+
                     <div style="display:flex; justify-content:center; gap:20px; font-size:24px; color:#444;">
                         <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
@@ -109,10 +127,16 @@
                     </div>
                 </div>
             </div>
+
             <div class="auc-footer">
-                <button class="nav-btn" onclick="clearDB()"><i class="fas fa-trash"></i></button>
-                <button class="nav-btn active"><i class="fas fa-list"></i> Правила</button>
-                <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
+                <div>
+                    <button class="nav-btn" onclick="clearDB()"><i class="fas fa-trash"></i></button>
+                    <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
+                </div>
+
+                <div id="onlineCounter" onclick="showOnlineList()" style="cursor:pointer; background:rgba(0,162,255,0.1); padding:5px 15px; border-radius:20px; border:1px solid var(--accent);">
+                    <i class="fas fa-users" style="color:var(--accent);"></i> <span id="onlineCount">0</span>
+                </div>
             </div>
         </section>
 
@@ -128,7 +152,9 @@
         const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
         let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'new';
         let tSec = 600, tInt = null;
+        let onlineUsers = {};
 
+        // --- ВЬЮХИ ---
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
@@ -142,20 +168,39 @@
             icon.className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
         }
 
-        function setWType(t) { 
-            wType = t;
-            document.getElementById('tNew').classList.toggle('active', t==='new');
-            document.getElementById('tClass').classList.toggle('active', t==='class');
-            drawWheel();
-        }
-
-        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
-
+        // --- БАЗА И РЕНДЕР ---
         db.ref('lots').on('value', s => { 
             const val = s.val();
             data = val ? Object.entries(val) : []; 
             renderAll(); 
         });
+
+        // Загрузка правил
+        db.ref('auction/rules').once('value', s => {
+            if(s.val()) document.getElementById('rulesArea').innerText = s.val();
+        });
+
+        // Онлайн зрители
+        db.ref('presence').on('value', s => {
+            onlineUsers = s.val() || {};
+            const count = Object.keys(onlineUsers).length;
+            document.getElementById('onlineCount').innerText = count;
+        });
+
+        function showOnlineList() {
+            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним').join(', ');
+            alert("Сейчас онлайн: " + (names || "никого"));
+        }
+
+        function saveRules() {
+            const text = document.getElementById('rulesArea').innerText;
+            db.ref('auction/rules').set(text);
+        }
+
+        function updateLock() {
+            const isLocked = document.getElementById('lockVoting').checked;
+            db.ref('auction/lockSettings').set(isLocked);
+        }
 
         function renderAll() {
             const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
@@ -167,6 +212,8 @@
                 const isOut = d.active === false;
                 const currentVotes = d.votes || d.val || 0;
                 const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
+                
+                // Для списка участников (колесо)
                 if(!(isOut && hide)) {
                     wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
@@ -174,16 +221,71 @@
                         <b>${currentVotes}</b>
                     </div>`;
                 }
-                al.innerHTML += `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #1a1a1a;">
-                    <span style="width:30px; color:#333;">${i+1}</span>
-                    <span style="flex:1;">${d.name}</span>
-                    <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                    <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle"></i></span>
-                    <i class="fas fa-trash" style="cursor:pointer; color:#222;" onclick="db.ref('lots/${id}').remove()"></i>
+
+                // Для админ-панели (список)
+                const votersNames = d.voters ? Object.values(d.voters).join(', ') : 'Нет данных';
+                al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a;">
+                    <div style="display:flex; align-items:center;">
+                        <span style="width:30px; color:#333;">${i+1}</span>
+                        <span style="flex:1; font-weight:bold;">${d.name}</span>
+                        <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
+                        <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle" title="${votersNames}" onclick="alert('Голосовали: ${votersNames}')" style="cursor:help;"></i></span>
+                        <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                    </div>
+                    <div style="font-size:10px; color:#555; padding-left:30px;">Автор: ${d.author || 'Админ'}</div>
                 </div>`;
             });
             drawWheel();
         }
+
+        // --- ТАЙМЕР ---
+        function applyTimer() {
+            const d = parseInt(document.getElementById('tDays').value) || 0;
+            const h = parseInt(document.getElementById('tHours').value) || 0;
+            const m = parseInt(document.getElementById('tMins').value) || 0;
+            tSec = (d * 86400) + (h * 3600) + (m * 60);
+            tUpdate();
+        }
+
+        function tUpdate() { 
+            const d = Math.floor(tSec / 86400);
+            const h = Math.floor((tSec % 86400) / 3600);
+            const m = Math.floor((tSec % 3600) / 60);
+            const s = tSec % 60;
+            
+            let timeStr = "";
+            if(d > 0) timeStr += `${d}д `;
+            timeStr += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            
+            document.getElementById('tDisp').innerText = timeStr; 
+            db.ref('auction').update({ timer: tSec, pass: PASS });
+            
+            // Если включена блокировка и время вышло
+            if(tSec <= 0 && document.getElementById('lockVoting').checked) {
+                db.ref('auction/votingClosed').set(true);
+            } else {
+                db.ref('auction/votingClosed').set(false);
+            }
+        }
+
+        function tToggle() { 
+            const b=document.getElementById('tPlay'); 
+            if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
+            else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();} else { clearInterval(tInt); tInt=null; b.className="fas fa-play"; }},1000); b.className="fas fa-pause";} 
+        }
+
+        function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
+        function tReset() { tSec=600; tUpdate(); }
+
+        // --- ЛОГИКА КОЛЕСА ---
+        function setWType(t) { 
+            wType = t;
+            document.getElementById('tNew').classList.toggle('active', t==='new');
+            document.getElementById('tClass').classList.toggle('active', t==='class');
+            drawWheel();
+        }
+
+        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
         function drawWheel() {
             const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
@@ -206,13 +308,9 @@
                     ctx.fillStyle = `hsl(${d.hue},65%,45%)`;
                 }
                 ctx.fill();
-                
                 ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
-                
-                // УМНАЯ ОБРЕЗКА ТЕКСТА
                 let txt = d.name;
                 if(txt.length > 16) txt = txt.substring(0, 14) + '...';
-                
                 ctx.fillText(txt, 240, 5); ctx.restore();
                 curr += slice;
             });
@@ -268,28 +366,14 @@
             setTimeout(() => { st.innerText = ''; }, 4000);
         }
 
-        function tUpdate() { 
-            const m=Math.floor(tSec/60), s=tSec%60; 
-            document.getElementById('tDisp').innerText=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`; 
-            db.ref('auction').update({ timer: tSec, pass: PASS });
-        }
-
-        function tToggle() { 
-            const b=document.getElementById('tPlay'); 
-            if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
-            else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();}},1000); b.className="fas fa-pause";} 
-        }
-
-        function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
-        function tReset() { tSec=600; tUpdate(); }
-        
         function addLot() { 
             const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||1; 
             if(n) {
                 const id = Date.now();
                 db.ref('lots/' + id).set({ 
                     id: id, name: n, votes: v, val: v,
-                    hue: Math.random()*360, active: true 
+                    hue: Math.random()*360, active: true,
+                    author: 'Admin'
                 }); 
             }
             document.getElementById('aName').value = '';
@@ -298,7 +382,7 @@
         function clearDB() { 
             if(confirm("УДАЛИТЬ ВСЕ?")) {
                 db.ref('lots').remove();
-                db.ref('auction').update({ timer: 600, pass: PASS });
+                db.ref('auction').update({ timer: 600, pass: PASS, rules: "" });
             }
         }
 
