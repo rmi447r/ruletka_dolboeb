@@ -240,19 +240,19 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-        /* --- НОВОЕ (ПРАВКА №2): ОКНО ОНЛАЙНА --- */
-        #onlinePopup {
+        /* НОВОЕ (ДЛЯ КРАСНОЙ ЗОНЫ): СТИЛЬ ОКНА ОНЛАЙНА */
+        #onlinePopupOverlay {
             display: none;
             position: fixed;
             bottom: 75px;
-            right: 30px;
+            right: 25px;
             width: 260px;
             max-height: 350px;
             background: #000;
             border: 1px solid var(--accent);
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 10px 30px #000;
+            box-shadow: 0 0 30px #000;
             z-index: 999;
             overflow-y: auto;
         }
@@ -260,13 +260,13 @@
 </head>
 <body id="mainBody">
 
-    <!-- НОВОЕ: ЭЛЕМЕНТ ДЛЯ ОНЛАЙН СПИСКА -->
-    <div id="onlinePopup">
+    <!-- НОВОЕ: HTML ОКНО ОНЛАЙНА -->
+    <div id="onlinePopupOverlay">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС В СЕТИ</span>
+            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС ОНЛАЙН</span>
             <i class="fas fa-times" onclick="showOnlineList()" style="cursor:pointer; font-size:12px;"></i>
         </div>
-        <div id="onlineUserListContainer" style="font-size:13px; color:#ccc; line-height:1.6;"></div>
+        <div id="onlineNamesContainer" style="font-size:13px; color:#ccc; line-height:1.6;"></div>
     </div>
 
     <aside class="sidebar">
@@ -324,7 +324,7 @@
             <div class="auc-container">
                 <div class="auc-card" style="padding: 20px;">
                     <h3 style="margin-top:0"><i class="fas fa-scroll"></i> ПРАВИЛА</h3>
-                    <!-- ПРАВКА №1: ТЕПЕРЬ ПРАВИЛА СОХРАНЯЮТСЯ -->
+                    <!-- ЗЕЛЕНАЯ ЗОНА: СОХРАНЯЕТСЯ ПРИ ВВОДЕ -->
                     <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none; min-height:100px;" oninput="saveRules()">Напишите правила здесь...</div>
                 </div>
 
@@ -367,6 +367,7 @@
                     <button class="nav-btn" onclick="clearDB()" style="margin:0; width:45px; height:45px;"><i class="fas fa-eraser"></i></button>
                 </div>
 
+                <!-- КРАСНАЯ ЗОНА: ОНЛАЙН СЧЕТЧИК -->
                 <div class="online-tag" id="onlineCounter" onclick="showOnlineList()">
                     <i class="fas fa-circle" style="font-size:8px; animation: pulse 1.5s infinite;"></i>
                     ОНЛАЙН: <span id="onlineCount">0</span>
@@ -432,11 +433,11 @@
 
         db.ref('presence').on('value', s => {
             onlineUsers = s.val() || {};
-            const userValues = Object.values(onlineUsers);
-            document.getElementById('onlineCount').innerText = userValues.length;
+            const names = Object.values(onlineUsers).map(u => u.name || 'Аноним');
+            document.getElementById('onlineCount').innerText = names.length;
             
-            // ПРАВКА №2: ОБНОВЛЯЕМ СПИСОК ИМЕН В ПОПАПЕ
-            document.getElementById('onlineUserListContainer').innerHTML = userValues.map(u => u.name || 'Аноним').join('<br>');
+            // ОБНОВЛЯЕМ СПИСОК В ПОПАПЕ
+            document.getElementById('onlineNamesContainer').innerHTML = names.join('<br>');
         });
 
         db.ref('auction/rules').once('value', s => {
@@ -444,13 +445,13 @@
         });
 
         // ФУНКЦИИ
-        // ПРАВКА №2: ПЕРЕКЛЮЧАЕМ ВИДИМОСТЬ ПОПАПА ОНЛАЙНА
+        // КРАСНАЯ ЗОНА: ПЕРЕКЛЮЧАЕМ ПОПАП ОНЛАЙНА
         function showOnlineList() {
-            const el = document.getElementById('onlinePopup');
+            const el = document.getElementById('onlinePopupOverlay');
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
-        // ПРАВКА №1: СОХРАНЕНИЕ ПРАВИЛ
+        // ЗЕЛЕНАЯ ЗОНА: СОХРАНЯЕМ ПРАВИЛА
         function saveRules() {
             const txt = document.getElementById('rulesArea').innerText;
             db.ref('auction/rules').set(txt);
@@ -460,9 +461,9 @@
             db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked);
         }
 
-        // ПРАВКА №3: РАБОЧИЙ БАН
+        // ФИОЛЕТОВАЯ ЗОНА: ФУНКЦИЯ БАНА
         function banUser(uid, name) {
-            if(!uid || uid === 'admin' || uid === 'undefined') return alert('ID не найден');
+            if(!uid || uid === 'admin' || uid === 'undefined') return alert('ID пользователя не найден');
             if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) db.ref('bans/' + uid).set(name);
         }
 
@@ -487,7 +488,7 @@
 
                 const vNames = d.voters ? Object.values(d.voters).join(', ') : 'Голосов еще нет';
                 
-                // ПРАВКА №3: КРАСНЫЙ ЧЕЛОВЕЧЕК (fa-user-times)
+                // ФИОЛЕТОВАЯ ЗОНА: ИКОНКА fa-user-times (КРАСНЫЙ ЧЕЛОВЕЧЕК)
                 al.innerHTML += `
                 <div class="auc-item-row">
                     <div style="display:flex; align-items:center;">
@@ -498,7 +499,7 @@
                             ${currentVotes} 
                             <i class="fas fa-users voters-btn" title="Кто голосовал?" onclick="alert('ЗА ${d.name.toUpperCase()} ГОЛОСОВАЛИ:\\n${vNames}')"></i>
                         </span>
-                        <i class="fas fa-user-times" style="cursor:pointer; color:var(--red); margin-right:15px; font-size:18px;" title="ЗАБАНЬ ЕГО" onclick="banUser('${d.uid}', '${d.author}')"></i>
+                        <i class="fas fa-user-times" style="cursor:pointer; color:var(--red); margin-right:15px; font-size:18px;" title="ЗАБАНИТЬ АВТОРА" onclick="banUser('${d.uid}', '${d.author}')"></i>
                         <i class="fas fa-times" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
                     </div>
                     <div style="font-size:11px; color:#444; padding-left:30px; margin-top:5px;">ПРЕДЛОЖИЛ: <span style="color:#777">${d.author || 'ADMIN'}</span></div>
