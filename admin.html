@@ -2,277 +2,327 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - ADMIN PRO</title>
+    <title>Stream Auction - Final Pro Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0a0a0a; --panel: #111; --accent: #00a2ff; --red: #ff4b4b; --sidebar-w: 60px; }
-        body { margin: 0; background: var(--bg); color: #efefef; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: var(--bg); color: #efefef; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; background-size: cover; background-position: center; }
         .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #1a1a1a; z-index: 100; }
         .nav-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 10px; cursor: pointer; color: #444; transition: 0.3s; background: none; border: none; outline: none; }
         .nav-btn.active { color: var(--accent); background: rgba(0, 162, 255, 0.1); }
         .app-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
-        .view-section { display: none; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; flex-direction: row; }
+        .view-section { display: none; width: 100%; height: 100%; }
         .view-section.active { display: flex; }
+        .lots-panel { width: 320px; background: rgba(10,10,10,0.95); padding: 20px; border-right: 1px solid #1a1a1a; transition: transform 0.4s ease; position: relative; display: flex; flex-direction: column; z-index: 50; }
+        .lots-panel.collapsed { transform: translateX(-320px); }
+        .toggle-trigger { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); background: #1a1a1a; color: var(--accent); width: 30px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 0 8px 8px 0; border: 1px solid #333; z-index: 60; }
+        .lot-item { display: flex; align-items: center; padding: 10px; background: #161616; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 13px; }
+        .lot-item.out { opacity: 0.2; text-decoration: line-through; filter: grayscale(1); }
+        .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+        .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
         
-        .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        canvas { max-width: 90%; max-height: 80vh; background: radial-gradient(circle, #111 0%, #000 100%); border-radius: 50%; }
+        .center-logo-box { 
+            position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; 
+            border: 3px solid #222; z-index: 40; display: none; overflow: hidden; 
+            top: 50%; left: 50%; transform: translate(-50%, -10%);
+            justify-content: center; align-items: center;
+        }
+        .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .control-panel { width: 280px; background: rgba(14,14,14,0.9); padding: 15px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; }
+        .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
+        .auc-container { display: grid; grid-template-columns: 300px 1fr 300px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
+        .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; position: absolute; bottom: 0; }
         
-        .list-panel { background: #111; border-radius: 12px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; width: 100%; height: 100%; }
-        .list-header { padding: 15px; background: #1a1a1a; font-weight: bold; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .list-content { flex: 1; overflow-y: auto; padding: 10px; }
-        .item { display: flex; align-items: center; padding: 12px; background: #161616; border-radius: 8px; margin-bottom: 8px; border: 1px solid #222; gap: 10px; }
-        
-        .btn { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-red { background: var(--red); color: #fff; }
-        .btn-blue { background: var(--accent); color: #fff; }
-        .btn-spin { background: var(--red); padding: 20px; width: 100%; font-size: 20px; margin-bottom: 10px; text-transform: uppercase; }
-        
-        .timer-box { background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; min-width: 250px; border: 1px solid #222; }
-        #tDisp { font-size: 48px; font-weight: 800; color: var(--accent); margin-bottom: 10px; font-family: monospace; }
-        
-        input { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; }
+        /* Стили для управления юзерами */
+        .user-item { display: flex; align-items: center; padding: 12px; background: #111; border-radius: 8px; border: 1px solid #222; margin-bottom: 10px; justify-content: space-between; }
+        .btn-reset { background: var(--red); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
     <aside class="sidebar">
         <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-dharmachakra"></i></button>
         <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-list-ul"></i></button>
-        <button class="nav-btn" onclick="setView('users', this)"><i class="fas fa-users"></i></button>
-        <button class="nav-btn" style="margin-top: auto; color: var(--red);" onclick="clearDB()"><i class="fas fa-trash-alt"></i></button>
+        <button class="nav-btn" onclick="setView('vip', this)"><i class="fas fa-users"></i></button>
+        <button class="nav-btn" style="margin-top: auto; margin-bottom: 20px;" onclick="clearDB()"><i class="fas fa-trash-alt"></i></button>
     </aside>
 
     <main class="app-content">
-        <section id="view-wheel" class="view-section active" style="gap: 20px;">
+        <section id="view-wheel" class="view-section active">
+            <div class="lots-panel" id="sidePanel">
+                <div class="toggle-trigger" onclick="toggleSide()"><i class="fas fa-chevron-left" id="sideIcon"></i></div>
+                <div style="font-size: 10px; color: #444; margin-bottom: 15px; font-weight: bold;">УЧАСТНИКИ</div>
+                <label style="font-size: 11px; color: #666; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; cursor: pointer;">
+                    <input type="checkbox" id="hideOut" onchange="renderAll()"> Скрыть выбывшие
+                </label>
+                <div id="wheelList" style="flex: 1; overflow-y: auto;"></div>
+            </div>
+
             <div class="wheel-zone">
-                <div id="simpleStatus" style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--accent);">ОЖИДАНИЕ...</div>
+                <div id="simpleStatus"></div>
+                <div class="marker"></div>
+                <div class="center-logo-box" id="logoBox"><img id="logoImg" src="" alt=""></div>
                 <canvas id="wheelCanvas" width="550" height="550"></canvas>
             </div>
-            <div style="width: 320px; display: flex; flex-direction: column;">
-                <button class="btn btn-spin" onclick="startSpin()">КРУТИТЬ</button>
-                <div style="margin-bottom: 15px;">
-                    <small>Время прокрутки (сек):</small>
-                    <input type="number" id="spinTime" value="5" style="width: 100%; margin-top: 5px;">
+
+            <div class="control-panel">
+                <button class="btn-spin" onclick="startSpin()">КРУТИТЬ</button>
+                <div style="font-size: 10px; color: #333;">ВРЕМЯ (СЕК)</div>
+                <input type="number" id="spinTime" style="background:#000; border:1px solid #222; color:#fff; padding:8px; border-radius:5px;" value="5">
+                
+                <div style="font-size: 10px; color: #333; margin-top: 10px;">ТИП КОЛЕСА</div>
+                <div style="display: flex; gap: 5px;">
+                    <button id="tNew" class="nav-btn active" style="flex:1; font-size:11px;" onclick="setWType('new')">Новое</button>
+                    <button id="tClass" class="nav-btn" style="flex:1; font-size:11px;" onclick="setWType('class')">Классика</button>
                 </div>
-                <div class="list-panel">
-                    <div class="list-header">В КОЛЕСЕ</div>
-                    <div id="wheelList" class="list-content"></div>
+                
+                <div style="display: flex; gap: 5px;">
+                    <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fBg').click()">ФОН</button>
+                    <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
                 </div>
             </div>
         </section>
 
-        <section id="view-auc" class="view-section" style="gap: 20px;">
-            <div class="list-panel" style="flex: 2;">
-                <div class="list-header">
-                    <span>УПРАВЛЕНИЕ ЛОТАМИ</span>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="aName" placeholder="Название лота...">
-                        <button class="btn btn-blue" onclick="addLot()">ДОБАВИТЬ</button>
-                    </div>
+        <section id="view-auc" class="view-section" style="flex-direction:column;">
+            <div class="auc-container">
+                <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
+                    <h3>Правила</h3>
+                    <div id="rulesBox" contenteditable="true" style="color:#888; min-height: 200px;" oninput="saveRules()">Текст правил...</div>
                 </div>
-                <div id="aucList" class="list-content"></div>
-            </div>
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
-                <div class="timer-box">
-                    <div id="tDisp">10:00:00</div>
-                    <div style="display:flex; justify-content:center; gap:20px; font-size:28px;">
-                        <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer; color: var(--accent)"></i>
+                <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
+                    <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
+                        <input type="text" id="aName" placeholder="Лот..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
+                        <input type="number" id="aVal" value="1" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:8px;">
+                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px;">+</button>
+                    </div>
+                    <div id="aucList" style="flex:1; overflow-y:auto;"></div>
+                </div>
+                <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content;">
+                    <div id="tDisp" style="font-size:44px; font-weight:bold; margin-bottom:15px;">10:00:00</div>
+                    <div style="display:flex; justify-content:center; gap:20px; font-size:24px; color:#444;">
+                        <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
+                        <i class="fas fa-caret-up" onclick="tMod(60)" style="cursor:pointer;"></i>
+                        <i class="fas fa-caret-down" onclick="tMod(-60)" style="cursor:pointer;"></i>
                     </div>
                 </div>
-                <div class="list-panel">
-                    <div class="list-header">ПРАВИЛА</div>
-                    <textarea id="rulesEdit" style="flex:1; background:#000; color:#ccc; border:none; padding:10px; resize:none;" placeholder="Введите правила..."></textarea>
-                    <button class="btn btn-blue" style="border-radius:0" onclick="saveRules()">СОХРАНИТЬ</button>
-                </div>
+            </div>
+            <div class="auc-footer">
+                <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
             </div>
         </section>
 
-        <section id="view-users" class="view-section">
-            <div class="list-panel">
-                <div class="list-header">ЗРИТЕЛИ ОНЛАЙН (КТО ЗАШЕЛ ЧЕРЕЗ TWITCH)</div>
-                <div id="userList" class="list-content"></div>
-            </div>
+        <section id="view-vip" class="view-section" style="padding: 40px; flex-direction: column;">
+            <h2 style="color: var(--accent);"><i class="fas fa-users"></i> Управление зрителями</h2>
+            <p style="color: #555;">Тут можно обнулить голос юзера, если он ошибся или накрутил.</p>
+            <div id="userList" style="flex: 1; overflow-y: auto; max-width: 600px; margin-top: 20px;">
+                </div>
         </section>
+
+        <input type="file" id="fBg" hidden onchange="up(this,'bg')">
+        <input type="file" id="fLogo" hidden onchange="up(this,'logo')">
     </main>
 
     <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
-            databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let data = [], isSpinning = false, rotation = 0, tSec = 600, tInt = null;
+        const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
+        let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'new';
+        let tSec = 600, tInt = null;
 
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active');
-            b.classList.add('active');
+            document.getElementById('view-'+id).classList.add('active'); 
+            if(b) b.classList.add('active');
         }
 
-        // ГЛАВНЫЙ СЛУШАТЕЛЬ БАЗЫ
+        function toggleSide() {
+            const p = document.getElementById('sidePanel');
+            const icon = document.getElementById('sideIcon');
+            p.classList.toggle('collapsed');
+            icon.className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
+        }
+
+        function setWType(t) { 
+            wType = t;
+            document.getElementById('tNew').classList.toggle('active', t==='new');
+            document.getElementById('tClass').classList.toggle('active', t==='class');
+            drawWheel();
+        }
+
+        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
+
+        // ЗАГРУЗКА ПРАВИЛ
+        db.ref('rules').on('value', s => { if(s.val()) document.getElementById('rulesBox').innerText = s.val(); });
+        function saveRules() { db.ref('rules').set(document.getElementById('rulesBox').innerText); }
+
+        // ГЛАВНЫЙ ОБРАБОТЧИК ДАННЫХ
         db.ref().on('value', snap => {
             const world = snap.val() || {};
             data = world.lots ? Object.entries(world.lots) : [];
             const voters = world.voters || {};
-            if (world.rules) document.getElementById('rulesEdit').value = world.rules;
             renderAll(voters);
         });
 
         function renderAll(voters) {
-            const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), ul = document.getElementById('userList');
+            const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), ul = document.getElementById('userList'), hide = document.getElementById('hideOut').checked;
             wl.innerHTML = ''; al.innerHTML = ''; ul.innerHTML = '';
+            
+            const active = data.filter(([id,d]) => d.active !== false);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
 
-            const activeLots = data.filter(([id,d]) => d.active !== false);
-            const totalVotes = activeLots.reduce((a,[id,d]) => a + (d.votes || 0), 0);
-
-            // ЛОТЫ
-            data.forEach(([id, d]) => {
-                const perc = totalVotes > 0 ? (((d.votes||0)/totalVotes)*100).toFixed(1) : 0;
-                const lotHtml = `
-                    <div class="item" style="${d.active === false ? 'opacity:0.5' : ''}">
-                        <div style="flex:1">
-                            <b>${d.name}</b><br>
-                            <small style="color:#666">от ${d.creator || 'admin'}</small>
-                        </div>
-                        <div style="text-align:right">
-                            <span style="color:var(--accent); font-weight:bold">${d.votes || 0} шт.</span><br>
-                            <small>${perc}%</small>
-                        </div>
-                        <button class="btn btn-red" onclick="removeLot('${id}')" style="padding:5px 10px"><i class="fas fa-trash"></i></button>
+            // Рендер лотов
+            data.forEach(([id, d], i) => {
+                const isOut = d.active === false;
+                const currentVotes = d.votes || d.val || 0;
+                const p = total > 0 ? ((currentVotes/total)*100).toFixed(1) : 0;
+                
+                if(!(isOut && hide)) {
+                    wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
+                        <span style="flex:1; overflow:hidden;">${d.name}</span>
+                        ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
+                        <b>${currentVotes}</b>
                     </div>`;
-                al.innerHTML += lotHtml;
-                if(d.active !== false) wl.innerHTML += lotHtml;
+                }
+
+                al.innerHTML += `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #1a1a1a;">
+                    <span style="width:30px; color:#333;">${i+1}</span>
+                    <span style="flex:1;"><b>${d.name}</b> <br><small style="color:#444">от ${d.creator || 'admin'}</small></span>
+                    <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
+                    <span style="margin-right:15px;">${currentVotes} <i class="fas fa-user-circle"></i></span>
+                    <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="db.ref('lots/${id}').remove()"></i>
+                </div>`;
             });
 
-            // ЮЗЕРЫ
-            const voterEntries = Object.entries(voters);
-            if(voterEntries.length === 0) {
-                ul.innerHTML = '<div style="text-align:center; color:#444; margin-top:50px;">Никто еще не залогинился через Twitch</div>';
-            }
-            voterEntries.forEach(([uid, v]) => {
-                ul.innerHTML += `
-                    <div class="item">
-                        <div style="flex:1">
-                            <b>${v.name}</b> <small style="color:#666">(ID: ${uid})</small><br>
-                            <small>Действие: ${v.lot ? 'Голос за лот' : (v.created ? 'Предложил: ' + v.created : 'Просто зашел')}</small>
-                        </div>
-                        <button class="btn btn-red" onclick="banUser('${uid}')">СБРОСИТЬ</button>
-                    </div>`;
+            // Рендер юзеров
+            Object.entries(voters || {}).forEach(([uid, v]) => {
+                ul.innerHTML += `<div class="user-item">
+                    <span><b>${v.name}</b> <small style="color:#444; margin-left:10px;">выбор: ${v.lot || 'нет'}</small></span>
+                    <button class="btn-reset" onclick="resetUser('${uid}')">СБРОСИТЬ</button>
+                </div>`;
             });
 
             drawWheel();
         }
 
-        // ФУНКЦИИ УПРАВЛЕНИЯ
-        function saveRules() {
-            const val = document.getElementById('rulesEdit').value;
-            db.ref('rules').set(val);
-            alert("Правила сохранены!");
-        }
-
-        function banUser(uid) {
-            if(confirm("Удалить активность этого юзера? Он сможет проголосовать заново.")) {
+        function resetUser(uid) {
+            if(confirm("Удалить голос этого пользователя?")) {
                 db.ref('voters/' + uid).remove();
             }
         }
 
-        function removeLot(id) {
-            if(confirm("Удалить лот совсем?")) db.ref('lots/' + id).remove();
-        }
-
-        function addLot() {
-            const n = document.getElementById('aName').value.trim();
-            if(!n) return;
-            const id = Date.now();
-            db.ref('lots/'+id).set({ id, name: n, votes: 1, val: 1, hue: Math.random()*360, active: true, creator: 'ADMIN' });
-            document.getElementById('aName').value = '';
-        }
-
-        function clearDB() {
-            if(confirm("ВНИМАНИЕ: Это удалит ВСЕ лоты и ВСЕ голоса зрителей. Уверен?")) {
-                db.ref('lots').remove();
-                db.ref('voters').remove();
-            }
-        }
-
-        // КОЛЕСО
         function drawWheel() {
             const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
             ctx.clearRect(0,0,550,550);
             const active = data.filter(([id,d]) => d.active !== false);
-            if(!active.length) {
-                ctx.fillStyle = "#222"; ctx.textAlign = "center"; ctx.fillText("ДОБАВЬТЕ ЛОТЫ", 275, 275);
-                return;
-            }
-            const total = active.reduce((a,[id,d]) => a + (d.votes || 0), 0);
+            if(!active.length) return;
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
-            active.forEach(([id, d]) => {
-                const slice = ((d.votes||0)/total) * (Math.PI*2);
+            active.forEach(([id, d], i) => {
+                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
-                ctx.fillStyle = `hsl(${d.hue},65%,45%)`; ctx.fill();
-                ctx.strokeStyle = "rgba(0,0,0,0.2)"; ctx.lineWidth = 2; ctx.stroke();
-                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 16px sans-serif"; ctx.textAlign="right";
-                ctx.fillText(d.name.substring(0,20), 240, 5); ctx.restore();
+                if(wType === 'class') {
+                    ctx.fillStyle = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
+                    ctx.strokeStyle = `hsl(${d.hue},70%,50%)`; ctx.lineWidth = 2; ctx.stroke();
+                } else { ctx.fillStyle = `hsl(${d.hue},65%,45%)`; }
+                ctx.fill();
+                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
+                let txt = d.name; if(txt.length > 16) txt = txt.substring(0, 14) + '...';
+                ctx.fillText(txt, 240, 5); ctx.restore();
                 curr += slice;
             });
-            // Стрелка
-            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(275, 20); ctx.lineTo(260, 0); ctx.lineTo(290, 0); ctx.fill();
         }
 
         function startSpin() {
-            if(isSpinning) return; isSpinning = true;
-            const dur = document.getElementById('spinTime').value * 1000;
-            const start = performance.now();
-            const pwr = 40 + Math.random()*30;
-            const sRot = rotation;
+            const active = data.filter(([id,d]) => d.active !== false);
+            if(isSpinning || active.length < 2) return;
+            isSpinning = true;
+            document.getElementById('simpleStatus').innerText = '';
+            const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 35 + Math.random()*40, sRot = rotation;
             function anim(now) {
-                const p = Math.min((now-start)/dur, 1);
-                const ease = 1 - Math.pow(1-p, 3);
-                rotation = sRot + pwr * ease;
-                drawWheel();
+                const p = Math.min((now-start)/dur, 1), ease = 1 - Math.pow(1-p, 4);
+                rotation = sRot + pwr * ease; drawWheel();
                 if(p < 1) requestAnimationFrame(anim);
-                else { isSpinning = false; finishSpin(); }
+                else { 
+                    isSpinning = false; 
+                    const win = getWin();
+                    if(win) {
+                        updateStatus(win.name, active.length === 2);
+                        db.ref('lots/'+win.id).update({active: false});
+                    }
+                }
             }
             requestAnimationFrame(anim);
         }
 
-        function finishSpin() {
+        function getWin() {
             const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + (d.votes || 0), 0);
+            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             const norm = ((rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
             const target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
             let cur = 0;
             for(const [id, d] of active) {
-                const slice = (d.votes/total)*(Math.PI*2);
-                if(target >= cur && target < cur + slice) {
-                    document.getElementById('simpleStatus').innerText = "ВЫБЫЛ: " + d.name;
-                    db.ref('lots/'+id).update({active: false});
-                    break;
-                }
+                const slice = ((d.votes || d.val || 0)/total) * (Math.PI*2);
+                if(target >= cur && target < cur + slice) return {id, name: d.name};
                 cur += slice;
             }
         }
 
-        // ТАЙМЕР
-        function tUpdate() { db.ref('auction/timer').set(tSec); }
-        function tToggle() { 
-            const b = document.getElementById('tPlay');
-            if(tInt) { clearInterval(tInt); tInt = null; b.className = "fas fa-play"; }
-            else { tInt = setInterval(() => { if(tSec > 0) { tSec--; tUpdate(); } }, 1000); b.className = "fas fa-pause"; }
+        function updateStatus(name, isFinal) {
+            const st = document.getElementById('simpleStatus');
+            if(isFinal) {
+                const winnerObj = data.filter(([id,d]) => d.active !== false && d.name !== name)[0];
+                const winner = winnerObj ? winnerObj[1].name : name;
+                st.style.color = "var(--accent)"; st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + winner;
+            } else {
+                st.style.color = "var(--red)"; st.innerText = "❌ ВЫБЫЛ: " + name;
+            }
+            setTimeout(() => { st.innerText = ''; }, 4000);
         }
-        function tReset() { tSec = 600; tUpdate(); }
-        db.ref('auction/timer').on('value', s => { 
-            tSec = s.val() || 0; 
-            const m = Math.floor(tSec/60), sec = tSec%60;
-            document.getElementById('tDisp').innerText = `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}:00`;
-        });
+
+        function tUpdate() { 
+            const m=Math.floor(tSec/60), s=tSec%60; 
+            document.getElementById('tDisp').innerText=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:00`; 
+            db.ref('auction').update({ timer: tSec, pass: PASS });
+        }
+
+        function tToggle() { 
+            const b=document.getElementById('tPlay'); 
+            if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
+            else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();}},1000); b.className="fas fa-pause";} 
+        }
+
+        function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
+        function tReset() { tSec=600; tUpdate(); }
+        
+        function addLot() { 
+            const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||1; 
+            if(n) {
+                const id = Date.now();
+                db.ref('lots/' + id).set({ id, name: n, votes: v, val: v, hue: Math.random()*360, active: true, creator: 'ADMIN' }); 
+            }
+            document.getElementById('aName').value = '';
+        }
+
+        function clearDB() { 
+            if(confirm("УДАЛИТЬ ВСЕ ДАННЫЕ?")) {
+                db.ref('lots').remove();
+                db.ref('voters').remove();
+                db.ref('auction').update({ timer: 600, pass: PASS });
+            }
+        }
+
+        function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
+        
+        tUpdate();
     </script>
 </body>
 </html>
