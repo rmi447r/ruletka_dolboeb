@@ -240,8 +240,8 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-        /* ОКНО ОНЛАЙНА В УГЛУ */
-        #onlineListPopup {
+        /* ИСПРАВЛЕНИЕ №2 (КРАСНАЯ ЗОНА): СТИЛЬ ОКНА ОНЛАЙНА */
+        #onlinePopupOverlay {
             display: none;
             position: fixed;
             bottom: 75px;
@@ -260,8 +260,8 @@
 </head>
 <body id="mainBody">
 
-    <!-- HTML: ОКНО ОНЛАЙНА -->
-    <div id="onlineListPopup">
+    <!-- ОКНО ОНЛАЙНА (ПОЯВЛЯЕТСЯ В ПРАВОМ НИЖНЕМ УГЛУ) -->
+    <div id="onlinePopupOverlay">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
             <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС ОНЛАЙН</span>
             <i class="fas fa-times" onclick="showOnlineList()" style="cursor:pointer; font-size:12px;"></i>
@@ -296,28 +296,27 @@
             </div>
 
             <div class="control-panel">
-                <!-- НАЗВАНИЕ КНОПКИ 1 в 1 -->
-                <button class="btn-spin" onclick="startSpin()">КРУТИТЬ</button>
+                <button class="btn-spin" onclick="startSpin()">КРУТИТЬ КОЛЕСО</button>
                 
                 <div style="background: #1a1a1a; padding: 15px; border-radius: 10px;">
-                    <div style="font-size: 11px; color: #555; margin-bottom: 8px;">ВРЕМЯ (СЕК)</div>
+                    <div style="font-size: 11px; color: #555; margin-bottom: 8px;">ДЛИТЕЛЬНОСТЬ (СЕК)</div>
                     <input type="number" id="spinTime" style="width: 100%; box-sizing: border-box;" value="5">
                 </div>
 
                 <div style="background: #1a1a1a; padding: 15px; border-radius: 10px;">
-                    <div style="font-size: 11px; color: #555; margin-bottom: 10px;">ТИП КОЛЕСА</div>
+                    <div style="font-size: 11px; color: #555; margin-bottom: 10px;">СТИЛЬ ОТОБРАЖЕНИЯ</div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="tNew" class="nav-btn active" style="flex:1; margin:0; height:40px; font-size:12px;" onclick="setWType('new')">Новое</button>
-                        <button id="tClass" class="nav-btn" style="flex:1; margin:0; height:40px; font-size:12px;" onclick="setWType('class')">Классика</button>
+                        <button id="tNew" class="nav-btn active" style="flex:1; margin:0; height:40px; font-size:12px;" onclick="setWType('new')">СЕКТОРЫ</button>
+                        <button id="tClass" class="nav-btn" style="flex:1; margin:0; height:40px; font-size:12px;" onclick="setWType('class')">ЛИНИИ</button>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
-                    <button class="nav-btn" style="flex:1; border:1px solid #222; height:45px;" onclick="document.getElementById('fBg').click()">ФОН</button>
-                    <button class="nav-btn" style="flex:1; border:1px solid #222; height:45px;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
+                    <button class="nav-btn" style="flex:1; border:1px solid #222; height:45px;" onclick="document.getElementById('fBg').click()"><i class="fas fa-image"></i></button>
+                    <button class="nav-btn" style="flex:1; border:1px solid #222; height:45px;" onclick="document.getElementById('fLogo').click()"><i class="fas fa-bullseye"></i></button>
                 </div>
                 
-                <button onclick="clearDB()" style="margin-top:auto; background:none; border:none; color:#333; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:11px;">ОЧИСТИТЬ БАЗУ</button>
+                <button onclick="clearDB()" style="margin-top:auto; background:#222; border:none; color:#ff4b4b; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:11px;">ОБНУЛИТЬ ВСЁ</button>
             </div>
         </section>
 
@@ -325,7 +324,7 @@
             <div class="auc-container">
                 <div class="auc-card" style="padding: 20px;">
                     <h3 style="margin-top:0"><i class="fas fa-scroll"></i> ПРАВИЛА</h3>
-                    <!-- ПРАВИЛА СОХРАНЯЮТСЯ ПРИ ВВОДЕ -->
+                    <!-- ИСПРАВЛЕНИЕ №1: СОХРАНЕНИЕ ПРАВИЛ ПРИ ВВОДЕ -->
                     <div id="rulesArea" contenteditable="true" style="color:#aaa; line-height:1.6; outline:none; min-height:100px;" oninput="saveRules()">Напишите правила здесь...</div>
                 </div>
 
@@ -347,7 +346,6 @@
                         <input type="number" id="tMins" placeholder="М" value="10">
                     </div>
                     
-                    <!-- НАЗВАНИЕ КНОПКИ 1 в 1 -->
                     <button onclick="applyTimer()" style="width:100%; background:#222; border:1px solid #333; color:#888; padding:10px; margin: 15px 0; border-radius:8px; cursor:pointer; font-size:12px;">УСТАНОВИТЬ ВРЕМЯ</button>
                     
                     <label style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:25px; font-size:13px; color:var(--red); cursor:pointer;">
@@ -369,7 +367,7 @@
                     <button class="nav-btn" onclick="clearDB()" style="margin:0; width:45px; height:45px;"><i class="fas fa-eraser"></i></button>
                 </div>
 
-                <!-- СИНЯЯ КНОПКА ОНЛАЙНА -->
+                <!-- ИСПРАВЛЕНИЕ №2: КНОПКА ОНЛАЙНА -->
                 <div class="online-tag" id="onlineCounter" onclick="showOnlineList()">
                     <i class="fas fa-circle" style="font-size:8px; animation: pulse 1.5s infinite;"></i>
                     ОНЛАЙН: <span id="onlineCount">0</span>
@@ -378,7 +376,7 @@
         </section>
 
         <section id="view-vip" class="view-section" style="flex-direction:column; padding:50px;">
-            <h2 style="color:var(--red); letter-spacing:3px;"><i class="fas fa-user-times"></i> ЧЕРНЫЙ СПИСОК</h2>
+            <h2 style="color:var(--red); letter-spacing:3px;"><i class="fas fa-user-slash"></i> ЧЕРНЫЙ СПИСОК</h2>
             <p style="color:#555; margin-bottom:30px;">Пользователи из этого списка не могут предлагать лоты и голосовать.</p>
             <div id="banList" style="max-width: 800px; overflow-y: auto;"></div>
         </section>
@@ -388,7 +386,7 @@
     </main>
 
     <script>
-        // FIREBASE КОНФИГ
+        // ИНИЦИАЛИЗАЦИЯ
         const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -437,7 +435,8 @@
             onlineUsers = s.val() || {};
             const names = Object.values(onlineUsers).map(u => u.name || 'Аноним');
             document.getElementById('onlineCount').innerText = names.length;
-            // ОБНОВЛЯЕМ СПИСОК В ОКНЕ
+            
+            // ИСПРАВЛЕНИЕ №2: ОБНОВЛЯЕМ СПИСОК В ОКНЕ
             document.getElementById('onlineNamesList').innerHTML = names.join('<br>');
         });
 
@@ -446,25 +445,28 @@
         });
 
         // ФУНКЦИИ
-        // ПЕРЕКЛЮЧЕНИЕ ОКНА ОНЛАЙНА
+        // ИСПРАВЛЕНИЕ №2: ПЕРЕКЛЮЧЕНИЕ ОКНА ОНЛАЙНА
         function showOnlineList() {
-            const el = document.getElementById('onlineListPopup');
+            const el = document.getElementById('onlinePopupOverlay');
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
-        // СОХРАНЕНИЕ ПРАВИЛ
+        // ИСПРАВЛЕНИЕ №1: СОХРАНЕНИЕ ПРАВИЛ
         function saveRules() {
-            db.ref('auction/rules').set(document.getElementById('rulesArea').innerText);
+            const txt = document.getElementById('rulesArea').innerText;
+            db.ref('auction/rules').set(txt);
         }
 
         function updateLock() {
             db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked);
         }
 
-        // БАН ПОЛЬЗОВАТЕЛЯ (КРАСНЫЙ ЧЕЛОВЕЧЕК)
+        // ИСПРАВЛЕНИЕ №3: РАБОЧИЙ БАН (КРАСНЫЙ ЧЕЛОВЕЧЕК)
         function banUser(uid, name) {
             if(!uid || uid === 'admin' || uid === 'undefined') return alert('ID не найден');
-            if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) db.ref('bans/' + uid).set(name);
+            if(confirm(`ЗАБАНИТЬ ПОЛЬЗОВАТЕЛЯ ${name}?`)) {
+                db.ref('bans/' + uid).set(name);
+            }
         }
 
         function renderAll() {
@@ -488,7 +490,7 @@
 
                 const vNames = d.voters ? Object.values(d.voters).join(', ') : 'Голосов еще нет';
                 
-                // СПИСОК С КРАСНЫМ ЧЕЛОВЕЧКОМ
+                // ИСПРАВЛЕНИЕ №3: ИКОНКА fa-user-times (КРАСНЫЙ ЧЕЛОВЕЧЕК)
                 al.innerHTML += `
                 <div class="auc-item-row">
                     <div style="display:flex; align-items:center;">
@@ -529,7 +531,7 @@
         function tToggle() { 
             const b = document.getElementById('tPlay'); 
             if(tInt) { clearInterval(tInt); tInt=null; b.className="fas fa-play"; } 
-            else { tInt=setInterval(()=>{ if(tSec>0){tSec--; tUpdate();} else {clearInterval(tInt); tInt=null; b.className="fas fa-play"; }},1000); b.className="fas fa-pause"; } 
+            else { tInt=setInterval(()=>{ if(tSec>0){tSec--; tUpdate();} else {clearInterval(tInt); tInt=null; b.className="fas fa-play";} },1000); b.className="fas fa-pause"; } 
         }
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
@@ -628,18 +630,12 @@
             }
         }
         
+        // СТИЛИ ОНЛАЙН ПУЛЬСАЦИИ
         const style = document.createElement('style');
         style.innerHTML = `@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }`;
         document.head.appendChild(style);
 
         tUpdate();
     </script>
-
-    <!-- НОВОЕ: ЭЛЕМЕНТ ДЛЯ СПИСКА ОНЛАЙНА -->
-    <div id="onlineListPopup" style="display:none; position:fixed; bottom:75px; right:25px; width:220px; background:#000; border:1px solid var(--accent); border-radius:10px; padding:15px; box-shadow:0 0 20px #000; z-index:999;">
-        <div style="font-size:10px; color:var(--accent); font-weight:bold; margin-bottom:8px; border-bottom:1px solid #222; padding-bottom:5px;">КТО В СЕТИ</div>
-        <div id="onlineNamesList" style="font-size:12px; line-height:1.5;"></div>
-    </div>
-
 </body>
 </html>
