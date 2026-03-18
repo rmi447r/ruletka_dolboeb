@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stream Auction - Система Голосования</title>
-    <!-- ПОДКЛЮЧЕНИЕ СКРИПТОВ И ИКОНОК -->
+    
+    <!-- ПОДКЛЮЧЕНИЕ БИБЛИОТЕК -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         /* ============================================================
-           ОСНОВНЫЕ СТИЛИ (ТВОЙ ОРИГИНАЛЬНЫЙ ДИЗАЙН)
+           БЛОК СТИЛЕЙ ИНТЕРФЕЙСА
            ============================================================ */
         body { 
             margin: 0; 
@@ -26,7 +27,7 @@
             box-sizing: border-box;
         }
 
-        /* ШАПКА И АВТОРИЗАЦИЯ */
+        /* АВТОРИЗАЦИЯ И ШАПКА */
         .header-auth { 
             position: absolute; 
             top: 15px; 
@@ -38,16 +39,18 @@
             background-color: #6441a5; 
             color: #ffffff; 
             border: none; 
-            padding: 12px 20px; 
-            border-radius: 10px; 
+            padding: 12px 22px; 
+            border-radius: 12px; 
             cursor: pointer; 
-            font-weight: bold; 
+            font-weight: 900; 
             font-size: 14px; 
             display: flex; 
             align-items: center; 
             gap: 10px; 
             transition: transform 0.3s ease, background-color 0.3s ease; 
-            box-shadow: 0 4px 15px rgba(100, 65, 165, 0.3);
+            box-shadow: 0 5px 15px rgba(100, 65, 165, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .twitch-btn:hover { 
@@ -60,37 +63,38 @@
             align-items: center; 
             gap: 12px; 
             background-color: #1a1a1a; 
-            padding: 8px 18px; 
-            border-radius: 50px; 
+            padding: 8px 20px; 
+            border-radius: 60px; 
             border: 1px solid #6441a5; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6);
         }
 
         .user-info img { 
-            width: 32px; 
-            height: 32px; 
+            width: 34px; 
+            height: 34px; 
             border-radius: 50%; 
-            border: 1px solid #ffffff; 
+            border: 2px solid #ffffff; 
         }
 
         .user-info span {
-            font-weight: bold;
-            font-size: 14px;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 0.5px;
         }
 
-        /* ТАБЛО ТАЙМЕРА (ПОДДЕРЖКА ДНЕЙ) */
+        /* ТАЙМЕР (ПОЛНЫЙ ФОРМАТ С ДНЯМИ) */
         #timerDisplay { 
             font-size: 16vw; 
             font-weight: 900; 
             color: #00a2ff; 
-            text-shadow: 0 0 30px rgba(0, 162, 255, 0.4); 
+            text-shadow: 0 0 30px rgba(0, 162, 255, 0.5); 
             margin: 60px 0 30px 0; 
             font-family: 'Courier New', Courier, monospace; 
-            letter-spacing: 2px;
+            letter-spacing: 4px;
         }
 
         @media (min-width: 600px) { 
-            #timerDisplay { font-size: 85px; } 
+            #timerDisplay { font-size: 90px; } 
         }
 
         .container { 
@@ -98,11 +102,11 @@
             max-width: 650px; 
         }
 
-        /* БЛОК ВВОДА НОВОГО ЛОТА */
+        /* ВВОД СВОЕГО ЛОТА */
         .input-group { 
             display: none; 
-            gap: 12px; 
-            margin-bottom: 35px; 
+            gap: 15px; 
+            margin-bottom: 40px; 
             width: 100%;
         }
 
@@ -111,28 +115,33 @@
             background-color: #1a1a1a; 
             border: 1px solid #333; 
             color: #ffffff; 
-            padding: 18px; 
-            border-radius: 15px; 
+            padding: 20px; 
+            border-radius: 16px; 
             font-size: 16px; 
             outline: none; 
-            transition: border-color 0.3s, box-shadow 0.3s; 
+            transition: all 0.3s ease; 
         }
 
         input:focus { 
             border-color: #00a2ff; 
-            box-shadow: 0 0 15px rgba(0, 162, 255, 0.2); 
+            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2); 
+            background-color: #222;
         }
 
         .btn-add { 
             background-color: #00a2ff; 
             border: none; 
             color: #ffffff; 
-            padding: 0 28px; 
-            border-radius: 15px; 
+            padding: 0 30px; 
+            border-radius: 16px; 
             cursor: pointer; 
-            font-weight: bold; 
-            font-size: 28px; 
-            transition: transform 0.2s, background-color 0.2s; 
+            font-weight: 900; 
+            font-size: 30px; 
+            transition: all 0.2s ease; 
+        }
+
+        .btn-add:hover {
+            background-color: #33b5ff;
         }
 
         .btn-add:active { 
@@ -142,86 +151,96 @@
         /* КАРТОЧКА ЛОТА */
         .lot-item { 
             background-color: #141414; 
-            border-radius: 20px; 
-            padding: 20px; 
-            margin-bottom: 15px; 
+            border-radius: 24px; 
+            padding: 22px; 
+            margin-bottom: 18px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             border: 1px solid #222222; 
-            transition: border-color 0.3s, transform 0.3s;
-            animation: fadeInLot 0.5s ease-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: lotFadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        @keyframes fadeInLot {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes lotFadeIn {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .lot-name { 
-            font-size: 20px; 
+            font-size: 22px; 
             font-weight: 800; 
             display: block; 
             margin-bottom: 6px; 
             color: #ffffff;
+            letter-spacing: -0.5px;
         }
 
         .lot-author { 
             font-size: 12px; 
-            color: #555555; 
+            color: #666666; 
             text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: 600;
+            letter-spacing: 1.5px; 
+            font-weight: 700;
         }
 
         .lot-votes { 
             color: #00a2ff; 
-            font-size: 22px; 
+            font-size: 24px; 
             font-weight: 900; 
-            margin-right: 5px;
+            margin-right: 8px;
         }
 
         .btn-vote { 
             background-color: #222222; 
             border: 1px solid #444444; 
             color: #ffffff; 
-            padding: 14px 26px; 
-            border-radius: 15px; 
+            padding: 15px 30px; 
+            border-radius: 18px; 
             cursor: pointer; 
-            font-weight: 800; 
-            transition: all 0.2s ease; 
+            font-weight: 900; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
             outline: none;
+            font-size: 16px;
         }
 
         .btn-vote:hover { 
             background-color: #00a2ff; 
             border-color: #00a2ff; 
-            box-shadow: 0 0 20px rgba(0, 162, 255, 0.4);
+            box-shadow: 0 0 25px rgba(0, 162, 255, 0.4);
+            transform: translateY(-2px);
         }
 
         .btn-vote:active {
             transform: scale(0.95);
         }
 
-        /* СООБЩЕНИЯ О СТАТУСЕ (ДЛЯ УЧАСТНИКОВ) */
+        /* СООБЩЕНИЯ О СТАТУСЕ (ОГРОМНЫЕ И ПОДРОБНЫЕ) */
         .status-msg { 
             color: #00a2ff; 
-            margin-bottom: 25px; 
-            font-weight: bold; 
+            margin-bottom: 30px; 
+            font-weight: 800; 
             display: none; 
             text-align: center; 
             background-color: rgba(0, 162, 255, 0.08); 
-            padding: 22px; 
-            border-radius: 20px; 
+            padding: 25px; 
+            border-radius: 24px; 
             width: 100%; 
-            max-width: 600px;
-            border: 1px dashed #00a2ff; 
+            max-width: 650px;
+            border: 2px dashed #00a2ff; 
             box-sizing: border-box;
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.6;
+            animation: pulseStatus 2s infinite ease-in-out;
         }
 
-        /* ЭКРАН ПОЛНОГО БАНА */
+        @keyframes pulseStatus {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* ЭКРАН ПОЛНОГО БЛОКА (БАН) */
         .banned-screen { 
             position: fixed; 
             top: 0; 
@@ -235,66 +254,68 @@
             align-items: center; 
             justify-content: center; 
             z-index: 10000; 
-            font-size: 26px; 
+            font-size: 28px; 
             text-align: center; 
-            font-weight: bold; 
-            padding: 40px; 
+            font-weight: 900; 
+            padding: 50px; 
             box-sizing: border-box;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .banned-screen i {
-            font-size: 80px;
-            margin-bottom: 20px;
+            font-size: 100px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(255, 75, 75, 0.5);
         }
 
-        /* ВСПОМОГАТЕЛЬНОЕ */
         .login-warning {
-            color: #444;
+            color: #555;
             font-size: 14px;
-            margin-bottom: 20px;
-            font-weight: 600;
+            margin-bottom: 25px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
-    <!-- КНОПКА ВХОДА ИЛИ ПРОФИЛЬ -->
+    <!-- ВЕРХНИЙ БЛОК: ТВИТЧ -->
     <div class="header-auth">
         <button id="loginBtn" class="twitch-btn" onclick="loginTwitch()">
-            <i class="fab fa-twitch"></i> ВОЙТИ ЧЕРЕЗ TWITCH
+            <i class="fab fa-twitch"></i> АВТОРИЗАЦИЯ ЧЕРЕЗ TWITCH
         </button>
         <div id="userInfo" class="user-info">
             <img id="userAvatar" src="" alt="Avatar">
             <span id="userName"></span>
-            <i class="fas fa-sign-out-alt" onclick="logout()" style="margin-left:15px; cursor:pointer; color: #444;"></i>
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="margin-left:20px; cursor:pointer; color: #555; font-size: 18px;"></i>
         </div>
     </div>
 
     <!-- ТАБЛО ТАЙМЕРА -->
     <div id="timerDisplay">00:00:00:00</div>
     
-    <!-- ТЕКСТ-ПРЕДУПРЕЖДЕНИЕ -->
-    <div id="loginWarning" class="login-warning">Войдите, чтобы участвовать в аукционе</div>
+    <!-- ПОДСКАЗКА ДЛЯ НЕАВТОРИЗОВАННЫХ -->
+    <div id="loginWarning" class="login-warning">Войдите, чтобы вкинуть свой лот или голос</div>
 
-    <!-- ОКНО СТАТУСА (ВЫ ПРОГОЛОСОВАЛИ / ВЫ ПРЕДЛОЖИЛИ) -->
+    <!-- БЛОК СТАТУСА ПРИ УЧАСТИИ -->
     <div id="statusMessage" class="status-msg"></div>
 
     <div class="container">
-        <!-- БЛОК ПРЕДЛОЖЕНИЯ (СКРЫВАЕТСЯ ПОСЛЕ ДЕЙСТВИЯ) -->
+        <!-- ФОРМА ПРЕДЛОЖЕНИЯ (СКРЫВАЕТСЯ ПОСЛЕ ДЕЙСТВИЯ) -->
         <div class="input-group" id="inputSection">
-            <input type="text" id="newLotName" placeholder="Введите название своего лота...">
+            <input type="text" id="newLotName" placeholder="Напиши название своего лота...">
             <button class="btn-add" onclick="suggestLot()">+</button>
         </div>
 
-        <!-- СПИСОК ЛОТОВ -->
+        <!-- ДИНАМИЧЕСКИЙ СПИСОК ЛОТОВ -->
         <div id="lotsContainer"></div>
     </div>
 
     <script>
         /* ============================================================
-           КОНФИГУРАЦИЯ И ИНИЦИАЛИЗАЦИЯ
+           ЛОГИКА ИНИЦИАЛИЗАЦИИ
            ============================================================ */
         const CLIENT_ID = 'wieivkm1m1fyhbfliadenazscmcoct';
         const REDIRECT_URI = 'https://rmi447r.github.io/ruletka_dolboeb/index.html';
@@ -309,10 +330,10 @@
         let currentUser = null;
 
         /* ============================================================
-           ЛОГИКА АВТОРИЗАЦИИ ЧЕРЕЗ TWITCH
+           ЛОГИКА TWITCH AUTH
            ============================================================ */
         function loginTwitch() {
-            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email`;
+            window.location.href = 'https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID + '&redirect_uri=' + REDIRECT_URI + '&response_type=token&scope=user:read:email';
         }
 
         function logout() {
@@ -321,6 +342,7 @@
         }
 
         async function checkAuth() {
+            // 1. ПРОВЕРКА ТОКЕНА В URL
             const hash = window.location.hash;
             if (hash) {
                 const params = new URLSearchParams(hash.substring(1));
@@ -332,6 +354,7 @@
                 }
             }
 
+            // 2. ПРОВЕРКА СОХРАНЕННОЙ СЕССИИ (LOCAL STORAGE)
             const saved = localStorage.getItem('twitch_user');
             if (saved) {
                 const session = JSON.parse(saved);
@@ -347,7 +370,7 @@
         async function fetchUserData(token) {
             try {
                 const res = await fetch('https://api.twitch.tv/helix/users', {
-                    headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${token}` }
+                    headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + token }
                 });
                 const data = await res.json();
                 if (data.data && data.data[0]) {
@@ -360,52 +383,52 @@
                     initUser();
                 }
             } catch(e) { 
-                console.error("Twitch Auth Error:", e); 
+                console.error("Firebase/Twitch Error:", e); 
             }
         }
 
         function initUser() {
             if (!currentUser) return;
 
-            // 🛡️ ПРОВЕРКА НА БАН (СИНХРОНИЗАЦИЯ С ADMIN.HTML)
-            db.ref('bans/' + currentUser.id).on('value', snap => {
+            // 🛡️ ПРОВЕРКА БАНА (СВЯЗЬ С ADMIN.HTML)
+            db.ref('bans/' + currentUser.id).on('value', function(snap) {
                 if (snap.exists()) {
-                    document.body.innerHTML = `
-                        <div class="banned-screen">
-                            <i class="fas fa-user-slash"></i>
-                            ДОСТУП ЗАБЛОКИРОВАН.<br>
-                            <span style="font-size: 14px; color: #444; margin-top: 15px; font-weight: normal; text-transform: none;">
-                                Вы были занесены в черный список администратором за нарушение правил.
-                            </span>
-                        </div>`;
+                    document.body.innerHTML = 
+                        '<div class="banned-screen">' +
+                            '<i class="fas fa-user-slash"></i>' +
+                            'ДОСТУП ЗАПРЕЩЕН.<br>' +
+                            '<span style="font-size: 16px; color: #444; margin-top: 20px; font-weight: 500; text-transform: none;">' +
+                                'Ваш аккаунт был заблокирован администратором за нарушение правил.' +
+                            '</span>' +
+                        '</div>';
                 }
             });
 
-            // UI ОБНОВЛЕНИЕ
+            // ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
             document.getElementById('loginBtn').style.display = 'none';
             document.getElementById('loginWarning').style.display = 'none';
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('userAvatar').src = currentUser.profile_image_url;
             document.getElementById('userName').innerText = currentUser.display_name;
             
-            // ПЕРЕДАЧА ОНЛАЙН СТАТУСА В АДМИНКУ
+            // ПЕРЕДАЧА ОНЛАЙНА В АДМИНКУ (PRESENCE)
             const presenceRef = db.ref('presence/' + currentUser.id);
             presenceRef.set({ name: currentUser.display_name, id: currentUser.id });
             presenceRef.onDisconnect().remove();
 
-            // ПРОВЕРКА УЧАСТИЯ
+            // ПРОВЕРКА УЧАСТИЯ В ГОЛОСОВАНИИ
             checkParticipation();
         }
 
         /* ============================================================
-           ЛОГИКА КОНТРОЛЯ ГОЛОСОВ (РАЗБЛОКИРОВКА КНОПОК)
+           ЛОГИКА ГОЛОСОВАНИЯ (1 АККАУНТ - 1 ДЕЙСТВИЕ)
            ============================================================ */
         function checkParticipation() {
             if (!currentUser) return;
             
-            // ГЛАВНАЯ ФИЧА: Если админ удаляет лот, запись здесь исчезнет, 
-            // и у юзера автоматически появится форма ввода и кнопки "+1".
-            db.ref('voters/' + currentUser.id).on('value', snap => {
+            // СЛУШАТЕЛЬ: Если админ удаляет лот в admin.html, запись здесь исчезнет, 
+            // и у зрителя мгновенно разблокируются кнопки.
+            db.ref('voters/' + currentUser.id).on('value', function(snap) {
                 const statusBox = document.getElementById('statusMessage');
                 const inputSection = document.getElementById('inputSection');
                 
@@ -415,74 +438,77 @@
                     statusBox.style.display = 'block';
                     
                     if (info.created) {
-                        statusBox.innerText = `Вы предложили лот: "${info.created}". Ожидайте начала!`;
+                        statusBox.innerText = 'Вы предложили лот: "' + info.created + '". Ожидайте начала!';
                     } else {
-                        statusBox.innerText = `Ваш голос принят. Если ваш лот будет удален админом, вы сможете проголосовать снова.`;
+                        statusBox.innerText = 'Ваш голос принят. Если лот будет удален админом, вы сможете проголосовать за другой.';
                     }
                     
-                    // Прячем все кнопки голосования
-                    document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                    // Прячем все кнопки "+1"
+                    document.querySelectorAll('.btn-vote').forEach(function(b) { b.style.display = 'none'; });
                 } else {
-                    // РАЗБЛОКИРОВКА (ЮЗЕР СНОВА МОЖЕТ ДЕЙСТВОВАТЬ)
+                    // ЕСЛИ ЗАПИСИ НЕТ (РАЗБЛОКИРОВКА)
                     inputSection.style.display = 'flex';
                     statusBox.style.display = 'none';
-                    document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'block');
+                    document.querySelectorAll('.btn-vote').forEach(function(b) { b.style.display = 'block'; });
                 }
             });
         }
 
         /* ============================================================
-           ОБРАБОТКА ЛОТОВ
+           ОБРАБОТКА И СИНХРОНИЗАЦИЯ ЛОТОВ
            ============================================================ */
-        db.ref('lots').on('value', snap => {
+        db.ref('lots').on('value', function(snap) {
             const container = document.getElementById('lotsContainer');
             container.innerHTML = '';
             const data = snap.val();
             if (!data) return;
 
-            // Превращаем в массив, фильтруем активные и сортируем по количеству голосов
-            const list = Object.keys(data).map(key => ({ id: key, ...data[key] }))
-                .filter(l => l.active !== false)
-                .sort((a, b) => (b.votes || 0) - (a.votes || 0));
+            // Превращаем объект в массив, фильтруем только активные и сортируем по голосам
+            const lotList = Object.keys(data).map(function(key) {
+                return { id: key, ...data[key] };
+            }).filter(function(l) {
+                return l.active !== false;
+            }).sort(function(a, b) {
+                return (b.votes || 0) - (a.votes || 0);
+            });
 
-            list.forEach(lot => {
+            lotList.forEach(function(lot) {
                 const div = document.createElement('div');
                 div.className = 'lot-item';
-                div.innerHTML = `
-                    <div style="flex: 1; padding-right: 10px;">
-                        <span class="lot-name">${lot.name}</span>
-                        <span class="lot-author">от ${lot.author || 'Анонима'}</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:20px;">
-                        <span class="lot-votes">${lot.votes || 0}</span>
-                        ${currentUser ? `<button class="btn-vote" id="btn_${lot.id}" onclick="vote('${lot.id}')">+1</button>` : ''}
-                    </div>
-                `;
+                div.innerHTML = 
+                    '<div>' +
+                        '<span class="lot-name">' + lot.name + '</span>' +
+                        '<span class="lot-author">от ' + (lot.author || 'Анонима') + '</span>' +
+                    '</div>' +
+                    '<div style="display:flex; align-items:center; gap:25px;">' +
+                        '<span class="lot-votes">' + (lot.votes || 0) + '</span>' +
+                        (currentUser ? '<button class="btn-vote" id="vote_btn_' + lot.id + '" onclick="vote(\'' + lot.id + '\')">+1</button>' : '') +
+                    '</div>';
                 container.appendChild(div);
             });
             
-            // Если уже голосовал — прячем кнопки сразу после загрузки списка
+            // Сразу после отрисовки проверяем, нужно ли спрятать кнопки
             if (currentUser) {
-                db.ref('voters/' + currentUser.id).once('value', s => {
+                db.ref('voters/' + currentUser.id).once('value', function(s) {
                     if (s.exists()) {
-                        document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                        document.querySelectorAll('.btn-vote').forEach(function(b) { b.style.display = 'none'; });
                     }
                 });
             }
         });
 
-        // ФУНКЦИЯ ОТДАЧИ ГОЛОСА
+        // ФУНКЦИЯ: ПРОГОЛОСОВАТЬ (+1)
         function vote(lotId) {
             if (!currentUser) return;
             
-            // 1. Помечаем юзера как проголосовавшего
+            // 1. Фиксируем голос юзера
             db.ref('voters/' + currentUser.id).set({ 
                 name: currentUser.display_name, 
                 lot: lotId 
             });
             
-            // 2. Инкремент голоса в лоте (безопасный метод транзакции)
-            db.ref('lots/' + lotId).transaction(l => {
+            // 2. Увеличиваем счетчик в лоте (Транзакция для надежности)
+            db.ref('lots/' + lotId).transaction(function(l) {
                 if (l) {
                     l.votes = (l.votes || 0) + 1;
                     if(!l.voters) l.voters = {};
@@ -492,7 +518,7 @@
             });
         }
 
-        // ФУНКЦИЯ ПРЕДЛОЖЕНИЯ СВОЕГО ЛОТА
+        // ФУНКЦИЯ: ПРЕДЛОЖИТЬ СВОЙ ЛОТ
         function suggestLot() {
             if (!currentUser) return;
             const input = document.getElementById('newLotName');
@@ -501,7 +527,7 @@
 
             const lotId = "lot_" + Date.now();
             
-            // 1. Создаем лот в основной базе
+            // 1. Запись лота
             db.ref('lots/' + lotId).set({
                 id: lotId,
                 name: name,
@@ -513,7 +539,7 @@
                 hue: Math.floor(Math.random() * 360)
             });
 
-            // 2. Блокируем юзера, записывая его действие
+            // 2. Блокировка юзера
             db.ref('voters/' + currentUser.id).set({
                 name: currentUser.display_name,
                 created: name,
@@ -526,7 +552,7 @@
         /* ============================================================
            ТАЙМЕР (СИНХРОНИЗАЦИЯ 3+ ДНЕЙ)
            ============================================================ */
-        db.ref('auction/timer').on('value', snap => {
+        db.ref('auction/timer').on('value', function(snap) {
             const t = snap.val() || 0;
             const d = Math.floor(t / 86400);
             const h = Math.floor((t % 86400) / 3600);
@@ -534,23 +560,26 @@
             const s = t % 60;
             
             document.getElementById('timerDisplay').innerText = 
-                `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                String(d).padStart(2,'0') + ":" + 
+                String(h).padStart(2,'0') + ":" + 
+                String(m).padStart(2,'0') + ":" + 
+                String(s).padStart(2,'0');
         });
 
-        // ГЛОБАЛЬНАЯ БЛОКИРОВКА ПРИ ОКОНЧАНИИ
-        db.ref('auction/votingClosed').on('value', snap => {
+        // БЛОКИРОВКА ПРИ ОКОНЧАНИИ ТАЙМЕРА (ADMIN SETTINGS)
+        db.ref('auction/votingClosed').on('value', function(snap) {
             if (snap.val() === true) {
                 document.getElementById('inputSection').style.display = 'none';
-                document.querySelectorAll('.btn-vote').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.btn-vote').forEach(function(b) { b.style.display = 'none'; });
                 const statusBox = document.getElementById('statusMessage');
                 statusBox.style.display = 'block';
-                statusBox.innerText = "ГОЛОСОВАНИЕ ЗАВЕРШЕНО. ОЖИДАЙТЕ РЕЗУЛЬТАТОВ НА СТРИМЕ!";
+                statusBox.innerText = "ПРИЕМ ГОЛОСОВ ЗАКОНЧЕН. СМОТРИТЕ СТРИМ!";
                 statusBox.style.borderColor = "#ff4b4b";
                 statusBox.style.color = "#ff4b4b";
             }
         });
 
-        // СТАРТ ПРОВЕРКИ
+        // ЗАПУСК ПРОВЕРКИ СЕССИИ
         checkAuth();
     </script>
 </body>
