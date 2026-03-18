@@ -2,11 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - Final Pro God Mode</title>
+    <title>Stream Auction - God Mode ELITE Edition</title>
+    <!-- ПОДКЛЮЧЕНИЕ СКРИПТОВ -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
+        /* =========================================
+           ГЛОБАЛЬНЫЕ СТИЛИ И ПЕРЕМЕННЫЕ
+           ========================================= */
         :root { 
             --bg: #0a0a0a; 
             --panel: #111; 
@@ -19,7 +24,7 @@
             margin: 0; 
             background-color: var(--bg); 
             color: #efefef; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
@@ -28,7 +33,9 @@
             background-repeat: no-repeat;
         }
 
-        /* САЙДБАР СЛЕВА */
+        /* =========================================
+           САЙДБАР (ЛЕВАЯ ЧАСТЬ)
+           ========================================= */
         .sidebar { 
             width: var(--sidebar-w); 
             background-color: #000; 
@@ -50,7 +57,7 @@
             border-radius: 10px; 
             cursor: pointer; 
             color: #444; 
-            transition: background 0.3s, color 0.3s; 
+            transition: all 0.3s ease; 
             background: none; 
             border: none; 
             outline: none;
@@ -61,6 +68,9 @@
             background-color: rgba(0, 162, 255, 0.1); 
         }
 
+        /* =========================================
+           ОСНОВНОЙ КОНТЕНТ ПРИЛОЖЕНИЯ
+           ========================================= */
         .app-content { 
             flex-grow: 1; 
             display: flex; 
@@ -78,7 +88,7 @@
             display: flex; 
         }
 
-        /* ПАНЕЛЬ УЧАСТНИКОВ */
+        /* ПАНЕЛЬ ЛОТОВ (ВНУТРИ КОЛЕСА) */
         .lots-panel { 
             width: 320px; 
             background-color: rgba(10, 10, 10, 0.95); 
@@ -116,13 +126,12 @@
         .lot-item { 
             display: flex; 
             align-items: center; 
-            padding: 10px; 
+            padding: 12px; 
             background-color: #161616; 
-            border-radius: 6px; 
-            margin-bottom: 6px; 
-            border-left: 3px solid var(--accent); 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            border-left: 4px solid var(--accent); 
             font-size: 13px; 
-            transition: opacity 0.3s;
         }
 
         .lot-item.out { 
@@ -131,7 +140,9 @@
             filter: grayscale(1); 
         }
 
-        /* КОЛЕСО ЦЕНТРАЛЬНОЕ */
+        /* =========================================
+           ЗОНА РУЛЕТКИ (КОЛЕСО)
+           ========================================= */
         .wheel-zone { 
             flex: 1; 
             display: flex; 
@@ -142,12 +153,12 @@
         }
 
         #simpleStatus { 
-            height: 40px; 
-            font-size: 22px; 
-            font-weight: bold; 
+            height: 50px; 
+            font-size: 24px; 
+            font-weight: 900; 
             text-transform: uppercase; 
             margin-bottom: 10px; 
-            letter-spacing: 1px; 
+            letter-spacing: 2px; 
         }
 
         .marker { 
@@ -183,7 +194,7 @@
             object-fit: cover; 
         }
 
-        /* КОНТРОЛЬ ПАНЕЛЬ */
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ (ПРАВО) */
         .control-panel { 
             width: 280px; 
             background-color: rgba(14, 14, 14, 0.9); 
@@ -191,27 +202,29 @@
             border-left: 1px solid #1a1a1a; 
             display: flex; 
             flex-direction: column; 
-            gap: 10px; 
+            gap: 12px; 
         }
 
         .btn-spin { 
             background-color: var(--red); 
             border: none; 
             color: #fff; 
-            padding: 15px; 
-            border-radius: 8px; 
+            padding: 18px; 
+            border-radius: 10px; 
             font-weight: 900; 
             cursor: pointer; 
-            font-size: 16px; 
-            outline: none;
+            font-size: 18px; 
+            text-transform: uppercase;
         }
 
-        /* АУКЦИОН */
+        /* =========================================
+           АУКЦИОННЫЙ ИНТЕРФЕЙС
+           ========================================= */
         .auc-container { 
             display: grid; 
-            grid-template-columns: 300px 1fr 340px; 
-            gap: 15px; 
-            padding: 20px; 
+            grid-template-columns: 320px 1fr 360px; 
+            gap: 20px; 
+            padding: 25px; 
             width: 100%; 
             height: calc(100% - 60px); 
             box-sizing: border-box; 
@@ -233,8 +246,8 @@
         
         .timer-input-group { 
             display: flex; 
-            gap: 5px; 
-            margin-bottom: 10px; 
+            gap: 8px; 
+            margin-bottom: 12px; 
         }
 
         .timer-input-group input { 
@@ -242,64 +255,63 @@
             background-color: #000; 
             border: 1px solid #333; 
             color: #fff; 
-            padding: 5px; 
+            padding: 8px; 
             text-align: center; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             outline: none;
         }
 
-        /* --------------------------------------------------- */
-        /* НОВОЕ: ПРАВАЯ ПАНЕЛЬ - СТЕК ИНТЕРФЕЙСОВ */
-        /* --------------------------------------------------- */
+        /* =========================================
+           СТЕК ИНТЕРФЕЙСОВ ПРАВОЙ ПАНЕЛИ
+           ========================================= */
 
-        /* 1. ВЕРХНЕЕ ОКНО: ОШИБКИ И УВЕДОМЛЕНИЯ (КРАСНАЯ ЗОНА) */
+        /* 1. КРАСНАЯ ЗОНА: ОШИБКИ И БАН (ПОД ТАЙМЕРОМ) */
         #error-overlay { 
             display: none; 
             position: fixed; 
-            top: 330px; /* ПЕРЕНЕС В ТОЧКУ КРАСНОЙ ПОМЕТКИ */
+            top: 320px; /* ПЕРЕНЕСЕНО НИЖЕ ПО ФОТО */
             right: 25px; 
-            width: 310px; 
+            width: 320px; 
             background-color: #111; 
             border: 1px solid var(--red); 
             border-radius: 12px; 
-            padding: 18px; 
+            padding: 20px; 
             z-index: 2500; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
         }
 
-        /* 2. СРЕДНЕЕ ОКНО: ИНФО О ГОЛОСАХ (КТО ГОЛОСОВАЛ) */
+        /* 2. СЕРЕДИНА: ИНФО О ЛОТЕ */
         #voters-overlay { 
             display: none; 
             position: fixed; 
-            bottom: 230px; /* МЕЖДУ НИЗОМ И ВЕРХОМ */
+            bottom: 230px; /* МЕЖДУ ОШИБКАМИ И ОНЛАЙНОМ */
             right: 25px; 
-            width: 310px; 
-            max-height: 320px; 
+            width: 320px; 
+            max-height: 300px; 
             background-color: #111; 
             border: 1px solid var(--accent); 
             border-radius: 12px; 
-            padding: 18px; 
+            padding: 20px; 
             z-index: 2400; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
             overflow-y: auto; 
         }
 
-        /* 3. НИЖНЕЕ ОКНО: ОНЛАЙН (СИНЯЯ ЗОНА) */
+        /* 3. СИНЯЯ ЗОНА: ОНЛАЙН (САМЫЙ НИЗ) */
         #online-overlay { 
             display: none; 
             position: fixed; 
-            bottom: 85px; /* У САМОЙ КНОПКИ */
+            bottom: 85px; 
             right: 25px; 
-            width: 310px; 
+            width: 320px; 
             background-color: #111; 
             border: 1px solid var(--accent); 
             border-radius: 12px; 
-            padding: 18px; 
+            padding: 20px; 
             z-index: 2300; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
         }
 
-        /* СТИЛИ СТРОК ДЛЯ ОКОН */
         .pop-row { 
             display: flex; 
             justify-content: space-between; 
@@ -309,15 +321,7 @@
             font-size: 14px; 
         }
 
-        .mini-ban-btn { 
-            color: var(--red); 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: transform 0.2s; 
-        }
-        .mini-ban-btn:hover { transform: scale(1.2); }
-
-        /* ТВОЯ ИКОНКА АВАТАРКИ */
+        /* ИКОНКА АВАТАРКИ В СПИСКЕ */
         .vote-avatar-box { 
             background-color: #fff; 
             color: #000; 
@@ -327,13 +331,13 @@
             display: inline-flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 11px; 
+            font-size: 10px; 
             margin-left: 8px; 
             vertical-align: middle; 
-            font-weight: bold;
+            font-weight: 900;
         }
 
-        /* ЦЕНТРАЛЬНАЯ МОДАЛКА (ДА/НЕТ) */
+        /* МОДАЛКА ЦЕНТРАЛЬНАЯ (ДА/НЕТ) */
         .modal-blur { 
             display: none; 
             position: fixed; 
@@ -351,11 +355,11 @@
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            width: 360px; 
+            width: 380px; 
             background-color: #111; 
             border: 1px solid var(--accent); 
             border-radius: 15px; 
-            padding: 25px; 
+            padding: 30px; 
             z-index: 3100; 
             box-shadow: 0 0 60px #000; 
         }
@@ -364,18 +368,17 @@
             display: flex; 
             justify-content: flex-end; 
             margin-top: 25px; 
-            gap: 12px; 
+            gap: 15px; 
         }
 
         .m-btn { 
-            padding: 12px 24px; 
-            border-radius: 6px; 
+            padding: 12px 28px; 
+            border-radius: 8px; 
             border: none; 
             cursor: pointer; 
             font-weight: 900; 
             text-transform: uppercase; 
-            font-size: 12px;
-            outline: none;
+            font-size: 13px;
         }
 
         .m-yes { background-color: var(--red); color: #fff; }
@@ -387,32 +390,30 @@
 </head>
 <body id="mainBody">
 
-    <!-- ФОН МОДАЛОК -->
+    <!-- ЦЕНТРАЛЬНАЯ МОДАЛКА -->
     <div id="modalOverlay" class="modal-blur"></div>
-
-    <!-- ОКНО ПОДТВЕРЖДЕНИЯ (БАН/УДАЛЕНИЕ) -->
     <div id="confirmModal" class="confirm-modal">
-        <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px; text-transform: uppercase;">СИСТЕМНЫЙ ЗАПРОС</h3>
-        <p id="mText" style="color:#bbb; line-height:1.5; font-size:15px;"></p>
+        <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px; text-transform: uppercase;">ЗАПРОС СИСТЕМЫ</h3>
+        <p id="mText" style="color:#bbb; line-height:1.6; font-size:16px;"></p>
         <div class="modal-btns">
             <button class="m-btn m-no" onclick="closeConfirm()">ОТМЕНА</button>
-            <button id="mConfirmBtn" class="m-btn m-yes">ПОДТВЕРДИТЬ</button>
+            <button id="mConfirmBtn" class="m-btn m-yes">ДА, ВЫПОЛНИТЬ</button>
         </div>
     </div>
 
-    <!-- 1. ВЕРХНЕЕ ОКНО: УВЕДОМЛЕНИЯ (КРАСНАЯ ЗОНА) -->
+    <!-- 1. ВЕРХНЕЕ ОКНО: ОШИБКИ / БАН (КРАСНАЯ ЗОНА) -->
     <div id="error-overlay">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <span style="color:var(--red); font-weight:bold; font-size:11px; letter-spacing:1px; text-transform: uppercase;">УВЕДОМЛЕНИЕ / ОШИБКА</span>
             <i class="fas fa-times" onclick="closeError()" style="cursor:pointer; color:#444;"></i>
         </div>
-        <div id="errorDisplay" style="color:#fff; font-size:14px; font-weight:bold; text-transform:uppercase;"></div>
+        <div id="errorDisplay" style="color:#fff; font-size:15px; font-weight:bold; text-transform:uppercase;"></div>
     </div>
 
-    <!-- 2. СРЕДНЕЕ ОКНО: КТО ГОЛОСОВАЛ (ИНФО) -->
+    <!-- 2. СРЕДНЕЕ ОКНО: КТО ГОЛОСОВАЛ (ИНФОРМАЦИЯ) -->
     <div id="voters-overlay">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
-            <span id="vTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ИНФОРМАЦИЯ</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:10px;">
+            <span id="vTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ИНФОРМАЦИЯ О ГОЛОСАХ</span>
             <i class="fas fa-times" onclick="closeVoters()" style="cursor:pointer; color:#555;"></i>
         </div>
         <div id="vListContent"></div>
@@ -420,14 +421,14 @@
 
     <!-- 3. НИЖНЕЕ ОКНО: ОНЛАЙН (СИНЯЯ ЗОНА) -->
     <div id="online-overlay">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--accent); text-transform: uppercase;">СЕЙЧАС В СЕТИ</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--accent); text-transform: uppercase;">ЗРИТЕЛИ В СЕТИ</span>
             <i class="fas fa-times" onclick="closeOnline()" style="cursor:pointer; color:#444;"></i>
         </div>
         <div id="onlineNamesBox" style="font-size:13px; color:#ccc; line-height:1.6; max-height:180px; overflow-y:auto;"></div>
     </div>
 
-    <!-- САЙДБАР (ТВОИ ИКОНКИ) -->
+    <!-- САЙДБАР С ТВОИМИ ИКОНКАМИ -->
     <aside class="sidebar">
         <button class="nav-btn active" onclick="setView('wheel', this)"><i class="fas fa-home"></i></button>
         <button class="nav-btn" onclick="setView('auc', this)"><i class="fas fa-envelope"></i></button>
@@ -456,18 +457,20 @@
 
             <div class="control-panel">
                 <button class="btn-spin" onclick="startSpin()">КРУТИТЬ</button>
-                <div style="font-size: 10px; color: #333; text-transform: uppercase; font-weight: bold;">Время (сек)</div>
-                <input type="number" id="spinTime" style="background-color:#000; border:1px solid #222; color:#fff; padding:8px; border-radius:5px;" value="5">
-                <div style="font-size: 10px; color: #333; margin-top: 10px; text-transform: uppercase; font-weight: bold;">Тип колеса</div>
+                <div style="font-size: 10px; color: #333; text-transform: uppercase; font-weight: bold; margin-top: 5px;">Время прокрутки (сек)</div>
+                <input type="number" id="spinTime" style="background-color:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:6px;" value="5">
+                
+                <div style="font-size: 10px; color: #333; margin-top: 10px; text-transform: uppercase; font-weight: bold;">Тип рулетки</div>
                 <div style="display: flex; gap: 5px;">
                     <button id="tNew" class="nav-btn" style="flex:1; font-size:11px;" onclick="setWType('new')">Новое</button>
                     <button id="tClass" class="nav-btn active" style="flex:1; font-size:11px;" onclick="setWType('class')">Классика</button>
                 </div>
+                
                 <div style="display: flex; gap: 5px; margin-top: 5px;">
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fBg').click()">ФОН</button>
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
                 </div>
-                <button onclick="askClearDB()" style="margin-top:auto; background:none; border:1px solid #222; color:#444; padding:10px; border-radius:6px; cursor:pointer; font-size:11px; text-transform: uppercase;">Очистить базу</button>
+                <button onclick="askClearDB()" style="margin-top:auto; background:none; border:1px solid #222; color:#444; padding:12px; border-radius:8px; cursor:pointer; font-size:11px; text-transform: uppercase;">Очистить базу данных</button>
             </div>
         </section>
 
@@ -475,33 +478,34 @@
         <section id="view-auc" class="view-section" style="flex-direction:column;">
             <div class="auc-container">
                 <div style="background-color:#111; border-radius:12px; padding:20px; border:1px solid #222;">
-                    <h3 style="text-transform: uppercase; letter-spacing: 1px;">Правила</h3>
-                    <div id="rulesArea" contenteditable="true" style="color:#efefef; min-height:100px; outline:none;" oninput="saveRules()">Текст правил...</div>
+                    <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-top: 0;">Правила</h3>
+                    <div id="rulesArea" contenteditable="true" style="color:#efefef; min-height:150px; outline:none;" oninput="saveRules()">Текст правил...</div>
                 </div>
 
                 <div style="background-color:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
-                    <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
-                        <input type="text" id="aName" placeholder="Название лота..." style="flex:1; background-color:#000; border:1px solid #333; color:#fff; padding:8px;">
-                        <input type="number" id="aVal" value="1" style="width:70px; background-color:#000; border:1px solid #333; color:#fff; padding:8px;">
-                        <button onclick="addLot()" style="background-color:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px; cursor:pointer;">+</button>
+                    <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222; background-color: #161616;">
+                        <input type="text" id="aName" placeholder="Название лота..." style="flex:1; background-color:#000; border:1px solid #333; color:#fff; padding:10px;">
+                        <input type="number" id="aVal" value="1" style="width:70px; background-color:#000; border:1px solid #333; color:#fff; padding:10px;">
+                        <button onclick="addLot()" style="background-color:var(--accent); border:none; color:#fff; padding:0 20px; border-radius:8px; cursor:pointer; font-weight: bold;">+</button>
                     </div>
                     <div id="aucList" style="flex:1; overflow-y:auto;"></div>
                 </div>
 
                 <div style="background-color:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace; letter-spacing: 2px;">00:00:10:00</div>
+                    <div id="tDisp" style="font-size:36px; font-weight:900; margin-bottom:15px; font-family: monospace; letter-spacing: 3px; color: #fff;">00:00:10:00</div>
                     <div class="timer-input-group">
                         <input type="number" id="tDays" placeholder="Дни" value="0">
                         <input type="number" id="tHours" placeholder="Часы" value="0">
                         <input type="number" id="tMins" placeholder="Мин" value="10">
                     </div>
-                    <button onclick="applyTimer()" style="width:100%; background-color:#222; border:none; color:#aaa; padding:8px; margin-bottom:15px; border-radius:4px; font-size:11px; cursor:pointer; text-transform: uppercase;">Установить время</button>
+                    <button onclick="applyTimer()" style="width:100%; background-color:#222; border:none; color:#aaa; padding:10px; margin-bottom:15px; border-radius:6px; font-size:12px; cursor:pointer; font-weight: 900; text-transform: uppercase;">Установить время</button>
+                    
                     <label style="display:block; margin-bottom:10px; font-size:12px; color:#777; cursor:pointer;"><input type="checkbox" id="lockVoting" onchange="updateLock()"> Блокировать по окончанию</label>
                     
-                    <!-- ЗЕЛЕНАЯ ЗОНА: БЫСТРОЕ УДАЛЕНИЕ -->
+                    <!-- ЗЕЛЕНАЯ ЗОНА: ЧЕКБОКС МГНОВЕННОГО УДАЛЕНИЯ -->
                     <label style="display:block; margin-bottom:15px; font-size:12px; color:var(--red); cursor:pointer; font-weight:bold; text-transform: uppercase;"><input type="checkbox" id="instantDelete"> Мгновенное удаление</label>
 
-                    <div style="display:flex; justify-content:center; gap:20px; font-size:24px; color:#444;">
+                    <div style="display:flex; justify-content:center; gap:25px; font-size:26px; color:#444;">
                         <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
                         <i class="fas fa-plus-circle" onclick="tMod(60)" style="cursor:pointer;"></i>
@@ -515,8 +519,9 @@
                     <button class="nav-btn" onclick="askClearDB()"><i class="fas fa-trash"></i></button>
                     <button class="nav-btn active" id="pBtn" onclick="togglePct()"><i class="fas fa-percent"></i> %</button>
                 </div>
-                <div id="onlineCounter" onclick="showOnlineList()" style="cursor:pointer; background-color:rgba(0,162,255,0.1); padding:5px 15px; border-radius:20px; border:1px solid var(--accent);">
-                    <i class="fas fa-users" style="color:var(--accent);"></i> <span id="onlineCount">0</span>
+                <!-- КНОПКА ОНЛАЙНА -->
+                <div id="onlineCounter" onclick="showOnlineList()" style="cursor:pointer; background-color:rgba(0,162,255,0.1); padding:8px 18px; border-radius:25px; border:1px solid var(--accent);">
+                    <i class="fas fa-users" style="color:var(--accent);"></i> <span id="onlineCount" style="font-weight: 900;">0</span>
                 </div>
             </div>
         </section>
@@ -524,15 +529,12 @@
         <!-- ЧЕРНЫЙ СПИСОК -->
         <section id="view-vip" class="view-section" style="flex-direction:column; padding:40px;">
             <h2 style="color:var(--red); text-transform: uppercase; letter-spacing: 2px;"><i class="fas fa-user-slash"></i> Черный список</h2>
-            <div id="banList" style="max-width: 600px; overflow-y: auto;"></div>
+            <div id="banList" style="max-width: 800px; overflow-y: auto;"></div>
         </section>
     </main>
 
-    <input type="file" id="fBg" hidden onchange="up(this,'bg')">
-    <input type="file" id="fLogo" hidden onchange="up(this,'logo')">
-
     <script>
-        // FIREBASE КОНФИГУРАЦИЯ
+        // --- ИНИЦИАЛИЗАЦИЯ ---
         const firebaseConfig = { 
             apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
             databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
@@ -541,16 +543,10 @@
         const db = firebase.database();
 
         const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
-        let data = [];
-        let isSpinning = false;
-        let rotation = 0;
-        let showPct = true;
-        let wType = 'class';
-        let tSec = 600;
-        let tInt = null;
-        let onlineUsers = {};
+        let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'class';
+        let tSec = 600, tInt = null, onlineUsers = {};
 
-        // --- УПРАВЛЕНИЕ ОКНАМИ (СТЕК) ---
+        // --- ИНТЕРФЕЙСНЫЕ ФУНКЦИИ (ОКНА) ---
         function askConfirm(title, text, confirmCallback) {
             document.getElementById('mTitle').innerText = title;
             document.getElementById('mText').innerText = text;
@@ -564,6 +560,16 @@
             document.getElementById('modalOverlay').style.display = 'none'; 
         }
         
+        function openVoters(title, html) { 
+            document.getElementById('vTitle').innerText = title; 
+            document.getElementById('vListContent').innerHTML = html; 
+            document.getElementById('voters-overlay').style.display = 'block'; 
+        }
+
+        function closeVoters() { 
+            document.getElementById('voters-overlay').style.display = 'none'; 
+        }
+
         function showOnlineList() {
             const el = document.getElementById('online-overlay');
             if(el.style.display === 'block') {
@@ -572,7 +578,7 @@
                 const names = Object.values(onlineUsers).map(u => {
                     return `<div class="pop-row"><span>${u.name || 'Аноним'}</span></div>`;
                 }).join('');
-                document.getElementById('onlineNamesBox').innerHTML = names || "В сети никого нет";
+                document.getElementById('onlineNamesBox').innerHTML = names || "Никого нет в сети";
                 el.style.display = 'block';
             }
         }
@@ -584,8 +590,8 @@
         function showError(text) {
             document.getElementById('errorDisplay').innerText = text;
             document.getElementById('error-overlay').style.display = 'block';
-            // Окно не пропадет само слишком быстро
-            setTimeout(closeError, 15000); 
+            // Окно стоит 8 секунд (Красная зона)
+            setTimeout(closeError, 8000); 
         }
 
         function closeError() { 
@@ -593,23 +599,16 @@
         }
 
         function showLotDetails(id, name, voters) {
-            document.getElementById('vTitle').innerText = "ЛОТ: " + name;
             if(!voters) {
-                document.getElementById('vListContent').innerHTML = "<div class='pop-row'>Пока голосов нет</div>";
+                openVoters("ЛОТ: " + name, "<div class='pop-row'>Пока голосов нет</div>");
             } else {
-                const html = Object.entries(voters).map(([uid, username]) => {
-                    return `<div class="pop-row">
+                const html = Object.entries(voters).map(([uid, username]) => `
+                    <div class="pop-row">
                         <span>${username}</span>
                         <i class="fas fa-user-slash mini-ban-btn" onclick="askBanUser('${uid}', '${username}')"></i>
-                    </div>`;
-                }).join('');
-                document.getElementById('vListContent').innerHTML = html;
+                    </div>`).join('');
+                openVoters("ЛОТ: " + name, html);
             }
-            document.getElementById('voters-overlay').style.display = 'block';
-        }
-
-        function closeVoters() { 
-            document.getElementById('voters-overlay').style.display = 'none'; 
         }
 
         // --- ЛОГИКА БАЗЫ ---
@@ -622,10 +621,11 @@
             const list = document.getElementById('banList'), bans = s.val() || {};
             list.innerHTML = '';
             Object.entries(bans).forEach(([uid, name]) => {
-                list.innerHTML += `<div class="pop-row" style="background-color:#161616; padding:12px; margin-bottom:6px; border-radius:8px; border-left:3px solid var(--red);">
-                    <span><b>${name}</b> (ID: ${uid})</span>
-                    <button style="background-color:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:11px;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
-                </div>`;
+                list.innerHTML += `
+                    <div class="pop-row" style="background-color:#161616; padding:15px; margin-bottom:8px; border-radius:10px; border-left:4px solid var(--red);">
+                        <span><b>${name}</b> (ID: ${uid})</span>
+                        <button style="background-color:var(--red); color:#fff; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:12px; font-weight: 900;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
+                    </div>`;
             });
         });
 
@@ -640,10 +640,10 @@
 
         // БАН С ЗАЩИТОЙ
         function askBanUser(uid, name) {
-            if(uid === 'admin' || name === 'Admin' || uid === 'undefined') {
+            if(uid === 'admin' || name === 'Admin' || !uid || uid === 'undefined') {
                 return showError("АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!");
             }
-            askConfirm("БАН ПОЛЬЗОВАТЕЛЯ", `Забанить ${name}? Пользователь будет заблокирован навсегда.`, () => {
+            askConfirm("БАН ПОЛЬЗОВАТЕЛЯ", `Забанить ${name}? Человек больше не сможет участвовать.`, () => {
                 db.ref('bans/' + uid).set(name);
             });
         }
@@ -662,66 +662,67 @@
             al.innerHTML = '';
             
             const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
+            const total = active.reduce((a, [id,d]) => a + (d.votes || 0), 0);
 
             data.forEach(([id, d], i) => {
-                const votes = d.votes || d.val || 0;
+                const votes = d.votes || 0;
                 const p = total > 0 ? ((votes/total)*100).toFixed(1) : 0;
                 
+                // Рендер для списка колеса (слева)
                 if(!(d.active === false && hide)) {
                     wl.innerHTML += `
                         <div class="lot-item ${d.active === false ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                             <span style="flex:1; overflow:hidden;">${d.name}</span>
-                            ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
-                            <b>${votes}</b>
+                            ${showPct ? `<span style="color:var(--accent); font-size:11px; margin:0 10px;">${p}%</span>` : ''}
+                            <b style="color:#fff;">${votes}</b>
                         </div>`;
                 }
 
+                // Рендер для списка аукциона (центр)
                 al.innerHTML += `
-                    <div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
+                    <div style="display:flex; flex-direction:column; padding:15px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
                         <div style="display:flex; align-items:center;">
-                            <span style="width:30px; color:#333;">${i+1}</span>
-                            <span style="flex:1; font-weight:bold;">${d.name}</span>
-                            <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                            <span style="margin-right:15px; cursor:pointer;" onclick='showLotDetails("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
+                            <span style="width:35px; color:#444; font-weight: 900;">${i+1}</span>
+                            <span style="flex:1; font-weight:bold; font-size:16px;">${d.name}</span>
+                            <span style="color:var(--accent); font-weight:900; margin-right:20px;">${p}%</span>
+                            <span style="margin-right:20px; cursor:pointer; font-weight: 900;" onclick='showLotDetails("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
                                 ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
                             </span>
-                            <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBanUser('${d.uid || d.authorId}', '${d.author}')"></i>
-                            <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="handleDeleteLot('${id}')"></i>
+                            <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:15px; font-size: 18px;" onclick="askBanUser('${d.uid || d.authorId}', '${d.author}')"></i>
+                            <i class="fas fa-trash" style="cursor:pointer; color:#444; font-size: 16px;" onclick="handleDeleteLot('${id}')"></i>
                         </div>
-                        <div style="font-size:10px; color:#555; padding-left:30px; margin-top:3px;">Автор: ${d.author || 'Admin'}</div>
+                        <div style="font-size:11px; color:#444; padding-left:35px; margin-top:5px; text-transform: uppercase; letter-spacing: 1px;">Автор: <span style="color:#777;">${d.author || 'Admin'}</span></div>
                     </div>`;
             });
             drawWheel();
         }
 
-        // СИСТЕМА УДАЛЕНИЯ
+        // УДАЛЕНИЕ С РАЗБЛОКИРОВКОЙ ЮЗЕРОВ
         function handleDeleteLot(id) {
-            const instant = document.getElementById('instantDelete').checked;
-            if(instant) { 
+            const isInstant = document.getElementById('instantDelete').checked;
+            if(isInstant) { 
                 executeLotDelete(id); 
             } else { 
-                askConfirm("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса будут сброшены.", () => {
+                askConfirm("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Все голоса вернутся людям, и они смогут переголосовать.", () => {
                     executeLotDelete(id);
                 }); 
             }
         }
 
         function executeLotDelete(id) {
-            // Удаляем лот из базы
             db.ref('lots/' + id).remove().then(() => {
-                // Чистим статусы пользователей
-                db.ref('users').once('value', snap => {
-                    snap.forEach(u => { 
-                        if(u.val().votedFor === id) {
-                            db.ref('users/' + u.key).update({ voted: false, votedFor: null }); 
+                // Разблокируем юзеров в папке voters
+                db.ref('voters').once('value', s => { 
+                    s.forEach(v => { 
+                        if(v.val().lotId === id || v.val().lot === id) {
+                            db.ref('voters/' + v.key).remove(); 
                         }
-                    });
+                    }); 
                 });
             });
         }
 
-        // --- ТАЙМЕР ---
+        // --- ТАЙМЕР (ПОЛНЫЙ ЦИКЛ С ДНЯМИ) ---
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
@@ -743,19 +744,11 @@
         function tToggle() { 
             const b = document.getElementById('tPlay'); 
             if(tInt) { 
-                clearInterval(tInt); 
-                tInt = null; 
-                b.className = "fas fa-play"; 
+                clearInterval(tInt); tInt = null; b.className = "fas fa-play"; 
             } else { 
                 tInt = setInterval(() => { 
-                    if(tSec > 0) { 
-                        tSec--; 
-                        tUpdate(); 
-                    } else { 
-                        clearInterval(tInt); 
-                        tInt = null; 
-                        b.className = "fas fa-play"; 
-                    } 
+                    if(tSec > 0) { tSec--; tUpdate(); } 
+                    else { clearInterval(tInt); tInt = null; b.className = "fas fa-play"; } 
                 }, 1000); 
                 b.className = "fas fa-pause"; 
             } 
@@ -764,7 +757,7 @@
         function tMod(v) { tSec = Math.max(0, tSec + v); tUpdate(); }
         function tReset() { tSec = 600; tUpdate(); }
 
-        // --- ЛОГИКА КОЛЕСА ---
+        // --- ЛОГИКА КОЛЕСА (ЭЛИТНАЯ КЛАССИКА) ---
         function setWType(t) { 
             wType = t; 
             document.getElementById('tNew').classList.toggle('active', t === 'new');
@@ -783,11 +776,11 @@
             ctx.clearRect(0, 0, 550, 550);
             const active = data.filter(([id,d]) => d.active !== false);
             if(!active.length) return;
-            const total = active.reduce((a, [id,d]) => a + (d.votes || d.val || 0), 0);
+            const total = active.reduce((a, [id,d]) => a + (d.votes || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
-                const votes = d.votes || d.val || 0;
-                // КЛАССИКА: РАЗМЕР ЗАВИСИТ ОТ ЛЮДЕЙ, НОВОЕ: ВСЕМ ПОРОВНУ
+                const votes = d.votes || 0;
+                // КЛАССИКА = ПО ВЕСУ ЛЮДЕЙ, НОВОЕ = ВСЕМ ПОРОВНУ
                 const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 ctx.save(); 
                 ctx.translate(275, 275); 
@@ -836,13 +829,12 @@
 
         function getWin() {
             const active = data.filter(([id,d]) => d.active !== false);
-            const total = active.reduce((a, [id,d]) => a + (d.votes || d.val || 0), 0);
-            const norm = ((rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
-            const target = (Math.PI * 1.5 - norm + (Math.PI * 2)) % (Math.PI * 2);
+            const total = active.reduce((a, [id,d]) => a + (d.votes || 0), 0);
+            const target = (Math.PI*1.5 - (rotation % (Math.PI*2)) + (Math.PI*4)) % (Math.PI*2);
             let cur = 0;
             for(const [id, d] of active) {
-                const votes = d.votes || d.val || 0;
-                const slice = wType === 'class' ? (votes/total) * (Math.PI * 2) : (Math.PI * 2) / active.length;
+                const votes = d.votes || 0;
+                const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 if(target >= cur && target < cur + slice) return { id, name: d.name };
                 cur += slice;
             }
@@ -859,7 +851,7 @@
             const n = document.getElementById('aName').value;
             const v = parseInt(document.getElementById('aVal').value) || 1; 
             if(n) {
-                const id = Date.now();
+                const id = "lot_" + Date.now();
                 db.ref('lots/' + id).set({ 
                     id: id, name: n, votes: v, val: v, hue: Math.random() * 360, 
                     active: true, author: 'Admin', uid: 'admin' 
