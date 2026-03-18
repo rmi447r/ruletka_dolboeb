@@ -2,16 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - God Mode ELITE PRO EDITION</title>
+    <title>Stream Auction - God Mode ELITE ULTIMATE Edition</title>
     
-    <!-- ПОДКЛЮЧЕНИЕ ВНЕШНИХ БИБЛИОТЕК -->
+    <!-- ПОДКЛЮЧЕНИЕ ОСНОВНЫХ БИБЛИОТЕК -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         /* ============================================================
-           БЛОК ГЛОБАЛЬНЫХ ПЕРЕМЕННЫХ И ОБНУЛЕНИЯ СТИЛЕЙ
+           БЛОК ГЛОБАЛЬНЫХ ПЕРЕМЕННЫХ И ОСНОВНЫХ СТИЛЕЙ
            ============================================================ */
         :root { 
             --bg: #0a0a0a; 
@@ -19,6 +19,7 @@
             --accent: #00a2ff; 
             --red: #ff4b4b; 
             --sidebar-w: 60px; 
+            --shadow-color: rgba(0, 0, 0, 0.8);
         }
 
         body { 
@@ -48,7 +49,7 @@
             padding-top: 25px; 
             border-right: 1px solid #1a1a1a; 
             z-index: 100; 
-            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
         }
 
         .nav-btn { 
@@ -57,7 +58,7 @@
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            margin-bottom: 18px; 
+            margin-bottom: 20px; 
             border-radius: 12px; 
             cursor: pointer; 
             color: #444; 
@@ -80,7 +81,7 @@
         }
 
         /* ============================================================
-           ОСНОВНОЙ КОНТЕНТНЫЙ БЛОК
+           ОСНОВНОЙ КОНТЕНТ (VIEW SECTIONS)
            ============================================================ */
         .app-content { 
             flex-grow: 1; 
@@ -95,7 +96,7 @@
             width: 100%; 
             height: 100%; 
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.5s ease;
         }
 
         .view-section.active { 
@@ -104,7 +105,7 @@
         }
 
         /* ============================================================
-           ЛЕВАЯ ПАНЕЛЬ ЛОТОВ (СПИСОК У КОЛЕСА)
+           ПАНЕЛЬ УЧАСТНИКОВ (ЛЕВАЯ В КОЛЕСЕ)
            ============================================================ */
         .lots-panel { 
             width: 320px; 
@@ -131,12 +132,12 @@
             background-color: #1a1a1a; 
             color: var(--accent); 
             width: 30px; 
-            height: 70px; 
+            height: 80px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             cursor: pointer; 
-            border-radius: 0 10px 10px 0; 
+            border-radius: 0 12px 12px 0; 
             border: 1px solid #333; 
             z-index: 60; 
             transition: background 0.3s;
@@ -165,7 +166,7 @@
         }
 
         /* ============================================================
-           ЦЕНТРАЛЬНАЯ ЗОНА (КОЛЕСО)
+           ЦЕНТРАЛЬНАЯ ЗОНА (КОЛЕСО РУЛЕТКИ)
            ============================================================ */
         .wheel-zone { 
             flex: 1; 
@@ -189,8 +190,8 @@
         .marker { 
             width: 0; 
             height: 0; 
-            border-left: 18px solid transparent; 
-            border-right: 18px solid transparent; 
+            border-left: 20px solid transparent; 
+            border-right: 20px solid transparent; 
             border-top: 35px solid var(--red); 
             z-index: 30; 
             margin-bottom: 5px; 
@@ -203,7 +204,7 @@
             height: 90px; 
             background-color: #000; 
             border-radius: 50%; 
-            border: 4px solid #222; 
+            border: 3px solid #222; 
             z-index: 40; 
             display: none; 
             overflow: hidden; 
@@ -222,7 +223,7 @@
         }
 
         /* ============================================================
-           ПАНЕЛЬ УПРАВЛЕНИЯ (СПРАВА)
+           ПАНЕЛЬ УПРАВЛЕНИЯ КОЛЕСОМ (ПРАВО)
            ============================================================ */
         .control-panel { 
             width: 290px; 
@@ -239,23 +240,21 @@
             background-color: var(--red); 
             border: none; 
             color: #fff; 
-            padding: 20px; 
+            padding: 22px; 
             border-radius: 12px; 
             font-weight: 900; 
             cursor: pointer; 
             font-size: 20px; 
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.1s, background-color 0.3s;
+            letter-spacing: 2px;
+            transition: transform 0.1s, filter 0.3s;
             box-shadow: 0 5px 15px rgba(255, 75, 75, 0.2);
         }
 
-        .btn-spin:active {
-            transform: scale(0.96);
-        }
+        .btn-spin:active { transform: scale(0.95); }
 
         /* ============================================================
-           АУКЦИОННЫЙ КОНТЕЙНЕР (СЕТКА)
+           КОНТЕЙНЕР АУКЦИОНА (СЕТКА)
            ============================================================ */
         .auc-container { 
             display: grid; 
@@ -274,7 +273,7 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 0 25px; 
+            padding: 0 30px; 
             width: 100%; 
             position: absolute; 
             bottom: 0; 
@@ -284,8 +283,8 @@
         
         .timer-input-group { 
             display: flex; 
-            gap: 10px; 
-            margin-bottom: 15px; 
+            gap: 8px; 
+            margin-bottom: 12px; 
         }
 
         .timer-input-group input { 
@@ -305,14 +304,14 @@
         }
 
         /* ============================================================
-           ИНТЕРФЕЙСНЫЕ ОКНА (ВЕРТИКАЛЬНЫЙ СТЕК СПРАВА)
+           ИНТЕРФЕЙСНЫЕ ОКНА (ВЕРТИКАЛЬНЫЙ СТЕК СПРАВА ПО ТВОЕЙ СХЕМЕ)
            ============================================================ */
 
-        /* 1. ВЕРХНЕЕ ОКНО: ОШИБКИ И УВЕДОМЛЕНИЯ (КРАСНАЯ ЗОНА) */
+        /* 1. КРАСНАЯ ЗОНА: ОШИБКИ И БАН (ВЕРХ - ПОД ТАЙМЕРОМ) */
         #error-overlay { 
             display: none; 
             position: fixed; 
-            top: 330px; /* ПОД ТАЙМЕРОМ - ПО ТВОЕМУ ЗАПРОСУ */
+            top: 320px; /* ТОЧКА ИЗ ТВОЕГО ЗАПРОСА (МЕТКА КРАСНЫМ) */
             right: 25px; 
             width: 330px; 
             background-color: #111; 
@@ -324,11 +323,11 @@
             backdrop-filter: blur(10px);
         }
 
-        /* 2. СРЕДНЕЕ ОКНО: КТО ГОЛОСОВАЛ (ИНФО) */
+        /* 2. СРЕДНЯЯ ЗОНА: ИНФОРМАЦИЯ О ГОЛОСАХ */
         #voters-overlay { 
             display: none; 
             position: fixed; 
-            bottom: 240px; /* МЕЖДУ НИЗОМ И ВЕРХОМ */
+            bottom: 230px; /* МЕЖДУ НИЗОМ И ВЕРХОМ */
             right: 25px; 
             width: 330px; 
             max-height: 350px; 
@@ -342,11 +341,11 @@
             backdrop-filter: blur(10px);
         }
 
-        /* 3. НИЖНЕЕ ОКНО: ОНЛАЙН (СИНЯЯ ЗОНА) */
+        /* 3. СИНЯЯ ЗОНА: ОНЛАЙН (САМЫЙ НИЗ) */
         #online-overlay { 
             display: none; 
             position: fixed; 
-            bottom: 90px; /* ПРИЖАТО К КНОПКЕ ОНЛАЙНА */
+            bottom: 85px; /* ПРИЖАТО К КНОПКЕ ОНЛАЙНА (МЕТКА СИНИМ) */
             right: 25px; 
             width: 330px; 
             background-color: #111; 
@@ -362,7 +361,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 12px 0; 
+            padding: 10px 0; 
             border-bottom: 1px solid #222; 
             font-size: 15px; 
         }
@@ -372,8 +371,19 @@
             cursor: pointer; 
             font-size: 18px; 
             transition: transform 0.2s; 
+            margin-left: 12px;
         }
-        .mini-ban-btn:hover { transform: scale(1.25); }
+
+        .mini-erase-btn { 
+            color: #888; 
+            cursor: pointer; 
+            font-size: 18px; 
+            transition: transform 0.2s; 
+        }
+
+        .mini-ban-btn:hover, .mini-erase-btn:hover { 
+            transform: scale(1.3); 
+        }
 
         /* ИКОНКА АВАТАРКИ В СПИСКЕ ЛОТОВ (МИКРО-ЧЕЛИК) */
         .vote-avatar-box { 
@@ -389,12 +399,10 @@
             margin-left: 10px; 
             vertical-align: middle; 
             font-weight: 900;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
-        /* ============================================================
-           ЦЕНТРАЛЬНАЯ МОДАЛКА (ПОДТВЕРЖДЕНИЕ ДЕЙСТВИЙ)
-           ============================================================ */
+        /* ЦЕНТРАЛЬНАЯ МОДАЛКА (ПОДТВЕРЖДЕНИЕ ДА/НЕТ) */
         .modal-blur { 
             display: none; 
             position: fixed; 
@@ -402,7 +410,7 @@
             left: 0; 
             width: 100%; 
             height: 100%; 
-            background-color: rgba(0,0,0,0.88); 
+            background-color: rgba(0,0,0,0.9); 
             z-index: 3000; 
         }
 
@@ -412,19 +420,19 @@
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            width: 400px; 
+            width: 420px; 
             background-color: #111; 
-            border: 1px solid var(--accent); 
-            border-radius: 18px; 
-            padding: 35px; 
+            border: 2px solid var(--accent); 
+            border-radius: 20px; 
+            padding: 40px; 
             z-index: 3100; 
-            box-shadow: 0 0 80px rgba(0,0,0,1); 
+            box-shadow: 0 0 100px rgba(0,0,0,1); 
         }
 
         .modal-btns { 
             display: flex; 
             justify-content: flex-end; 
-            margin-top: 30px; 
+            margin-top: 35px; 
             gap: 15px; 
         }
 
@@ -438,7 +446,7 @@
             font-size: 13px;
             letter-spacing: 1px;
             outline: none;
-            transition: filter 0.2s;
+            transition: background 0.3s;
         }
 
         .m-btn:hover {
@@ -446,7 +454,7 @@
         }
 
         .m-yes { background-color: var(--red); color: #fff; }
-        .m-no { background-color: #222; color: #777; }
+        .m-no { background-color: #222; color: #888; }
 
         /* СКРОЛЛБАР */
         ::-webkit-scrollbar { width: 6px; }
@@ -462,7 +470,7 @@
     <!-- ОКНО ПОДТВЕРЖДЕНИЯ (ЦЕНТРАЛЬНОЕ) -->
     <div id="confirmModal" class="confirm-modal">
         <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px; text-transform: uppercase;">ЗАПРОС СИСТЕМЫ</h3>
-        <p id="mText" style="color:#bbb; line-height:1.6; font-size:16px;"></p>
+        <p id="mText" style="color:#bbb; line-height:1.7; font-size:17px;"></p>
         <div class="modal-btns">
             <button class="m-btn m-no" onclick="closeConfirm()">ОТМЕНА</button>
             <button id="mConfirmBtn" class="m-btn m-yes">ДА, ВЫПОЛНИТЬ</button>
@@ -590,7 +598,7 @@
                         </label>
                     </div>
 
-                    <div style="display:flex; justify-content:center; gap:25px; font-size:28px; color:#444;">
+                    <div style="display:flex; justify-content:center; gap:30px; font-size:28px; color:#444;">
                         <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer; transition: color 0.2s;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer; transition: color 0.2s;"></i>
                         <i class="fas fa-plus-circle" onclick="tMod(60)" style="cursor:pointer; transition: color 0.2s;"></i>
@@ -627,7 +635,7 @@
 
     <script>
         /* ============================================================
-           БЛОК ИНИЦИАЛИЗАЦИИ FIREBASE (ТВОИ ДАННЫЕ)
+           ЛОГИКА ИНИЦИАЛИЗАЦИИ FIREBASE (ТВОИ ДАННЫЕ)
            ============================================================ */
         const firebaseConfig = { 
             apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
@@ -705,6 +713,52 @@
             document.getElementById('error-overlay').style.display = 'none'; 
         }
 
+        /* ============================================================
+           ЛОГИКА ОЧИСТКИ ГОЛОСА ПРИ БАНЕ (СПАМ-ФИКС)
+           ============================================================ */
+        function executeVoteRemoval(uid) {
+            // Находим запись юзера в voters
+            db.ref('voters/' + uid).once('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    const vData = snapshot.val();
+                    const lotId = vData.lotId || vData.lot;
+                    
+                    if (lotId) {
+                        // Убираем -1 из лота
+                        db.ref('lots/' + lotId).transaction(function(lot) {
+                            if (lot) {
+                                lot.votes = Math.max(0, (lot.votes || 0) - 1);
+                                if (lot.voters) delete lot.voters[uid];
+                            }
+                            return lot;
+                        });
+                    }
+                    // Удаляем метку юзера, чтобы он мог проголосовать заново (если разбанишь)
+                    db.ref('voters/' + uid).remove();
+                }
+            });
+        }
+
+        function askBanUser(uid, name) {
+            if(uid === 'admin' || name === 'Admin' || !uid || uid === 'undefined') {
+                return showError("ОШИБКА: АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!");
+            }
+            
+            askConfirm("БАН ПОЛЬЗОВАТЕЛЯ", "Вы точно хотите забанить " + name + "? Его голос будет удален из лота автоматически.", function() {
+                // 1. Стираем его голос
+                executeVoteRemoval(uid);
+                // 2. Добавляем в бан-лист (с паролем)
+                db.ref('bans/' + uid).set(name);
+            });
+        }
+
+        function askEraseOnlyVote(uid, name) {
+            askConfirm("ТОЛЬКО УДАЛЕНИЕ ГОЛОСА", "Удалить голос " + name + "? Человек сможет проголосовать за другой лот.", function() {
+                executeVoteRemoval(uid);
+                closeVoters();
+            });
+        }
+
         function showLotDetails(id, name, voters) {
             if(!voters) {
                 openVoters("ЛОТ: " + name.toUpperCase(), "<div class='pop-row'>Пока голосов нет</div>");
@@ -714,7 +768,10 @@
                     const username = item[1];
                     return '<div class="pop-row">' +
                         '<span>' + username + '</span>' +
-                        '<i class="fas fa-user-slash mini-ban-btn" onclick="askBanUser(\'' + uid + '\', \'' + username + '\')"></i>' +
+                        '<div>' +
+                            '<i class="fas fa-eraser mini-erase-btn" title="Стереть только голос" onclick="askEraseOnlyVote(\'' + uid + '\', \'' + username + '\')"></i>' +
+                            '<i class="fas fa-user-slash mini-ban-btn" title="Бан + Удалить голос" onclick="askBanUser(\'' + uid + '\', \'' + username + '\')"></i>' +
+                        '</div>' +
                     '</div>';
                 }).join('');
                 openVoters("ЛОТ: " + name.toUpperCase(), html);
@@ -753,31 +810,11 @@
             if(snapshot.val()) document.getElementById('rulesArea').innerText = snapshot.val(); 
         });
 
-        /* ============================================================
-           ЛОГИКА БАНА (С ЗАЩИТОЙ АДМИНИСТРАТОРА)
-           ============================================================ */
-        function askBanUser(uid, name) {
-            // ПРОВЕРКА: ЗАПРЕТ БАНА АДМИНА
-            if(uid === 'admin' || name === 'Admin' || !uid || uid === 'undefined') {
-                return showError("ОШИБКА: АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!");
-            }
-            
-            askConfirm("БАН ПОЛЬЗОВАТЕЛЯ", "Вы точно хотите забанить " + name + "? Человек больше не сможет зайти на аукцион.", function() {
-                // Отправляем в бан с паролем для правил базы
-                db.ref('bans/' + uid).set(name);
-                // Также удаляем его метку из voters чтобы не мешал
-                db.ref('voters/' + uid).remove();
-            });
-        }
-
-        /* ============================================================
-           СОХРАНЕНИЕ ПРАВИЛ (С ЗАЩИТОЙ ОТ ЛАГОВ)
-           ============================================================ */
+        // ПРАВИЛА (С ПАРОЛЕМ ДЛЯ FIREBASE)
         let rulesTimer;
         function saveRules() { 
             clearTimeout(rulesTimer); 
             rulesTimer = setTimeout(function() { 
-                // Отправляем правила + PASS чтобы Firebase разрешил запись
                 db.ref('auction').update({
                     rules: document.getElementById('rulesArea').innerText,
                     pass: PASS
@@ -819,7 +856,7 @@
                 al.innerHTML += 
                     '<div style="display:flex; flex-direction:column; padding:18px; border-bottom:1px solid #1a1a1a; ' + (d.active === false ? 'opacity:0.3' : '') + '">' +
                         '<div style="display:flex; align-items:center;">' +
-                            '<span style="width:35px; color:#444; font-weight: 900;">' + (i + 1) + '</span>' +
+                            '<span style="width:30px; color:#333; font-weight: 900;">' + (i + 1) + '</span>' +
                             '<span style="flex:1; font-weight:bold; font-size:16px;">' + d.name + '</span>' +
                             '<span style="color:var(--accent); font-weight:900; margin-right:25px;">' + p + '%</span>' +
                             '<span style="margin-right:20px; cursor:pointer; font-weight: 900;" onclick=\'showLotDetails("' + id + '", "' + d.name + '", ' + JSON.stringify(d.voters || null) + ')\'>' +
@@ -828,7 +865,7 @@
                             '<i class="fas fa-user-times" title="Бан автора" style="cursor:pointer; color:var(--red); margin-right:15px; font-size: 18px;" onclick="askBanUser(\'' + (d.uid || d.authorId) + '\', \'' + d.author + '\')"></i>' +
                             '<i class="fas fa-trash" title="Удалить лот" style="cursor:pointer; color:#444; font-size: 16px;" onclick="handleDeleteLot(\'' + id + '\')"></i>' +
                         '</div>' +
-                        '<div style="font-size:11px; color:#555; padding-left:35px; margin-top:6px; text-transform: uppercase; letter-spacing: 1px;">Автор: <span style="color:#777;">' + (d.author || 'Admin') + '</span></div>' +
+                        '<div style="font-size:10px; color:#555; padding-left:35px; margin-top:3px; text-transform: uppercase; letter-spacing: 1px;">Автор: <span style="color:#777;">' + (d.author || 'Admin') + '</span></div>' +
                     '</div>';
             });
             drawWheel();
@@ -849,13 +886,13 @@
         }
 
         function executeLotDelete(id) {
-            // Удаляем лот из ветки lots
+            // Удаляем лот с паролем
             db.ref('lots/' + id).remove().then(function() {
-                // ЧИСТИМ ПАПКУ VOTERS: находим всех, чья запись ссылается на этот лот
+                // Чистим всех юзеров
                 db.ref('voters').once('value', function(snapshot) { 
                     snapshot.forEach(function(child) { 
-                        const voterData = child.val();
-                        if(voterData.lotId === id || voterData.lot === id) {
+                        const vData = child.val();
+                        if(vData.lotId === id || vData.lot === id) {
                             db.ref('voters/' + child.key).remove(); 
                         }
                     }); 
@@ -864,7 +901,7 @@
         }
 
         /* ============================================================
-           ТАЙМЕР (ПОЛНАЯ ПОДДЕРЖКА ДНЕЙ И СИНХРОНИЗАЦИЯ)
+           ТАЙМЕР (ПОДДЕРЖКА 3+ ДНЕЙ)
            ============================================================ */
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
@@ -883,7 +920,6 @@
             const timeString = String(d).padStart(2,'0') + ":" + String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
             document.getElementById('tDisp').innerText = timeString;
             
-            // Отправляем время + PASS для Firebase
             db.ref('auction').update({ 
                 timer: tSec, 
                 pass: PASS,
@@ -899,31 +935,18 @@
                 b.className = "fas fa-play"; 
             } else { 
                 tInt = setInterval(function() { 
-                    if(tSec > 0) { 
-                        tSec--; 
-                        tUpdate(); 
-                    } else { 
-                        clearInterval(tInt); 
-                        tInt = null; 
-                        b.className = "fas fa-play"; 
-                    } 
+                    if(tSec > 0) { tSec--; tUpdate(); } 
+                    else { clearInterval(tInt); tInt = null; b.className = "fas fa-play"; } 
                 }, 1000); 
                 b.className = "fas fa-pause"; 
             } 
         }
 
-        function tMod(v) { 
-            tSec = Math.max(0, tSec + v); 
-            tUpdate(); 
-        }
-
-        function tReset() { 
-            tSec = 600; 
-            tUpdate(); 
-        }
+        function tMod(v) { tSec = Math.max(0, tSec + v); tUpdate(); }
+        function tReset() { tSec = 600; tUpdate(); }
 
         /* ============================================================
-           ЛОГИКА КОЛЕСА (ЭЛИТНАЯ КЛАССИКА VS НОВОЕ)
+           ЛОГИКА КОЛЕСА (ЭЛИТНАЯ КЛАССИКА)
            ============================================================ */
         function setWType(t) { 
             wType = t; 
@@ -953,33 +976,23 @@
                 const d = item[1];
                 const votes = d.votes || 0;
                 
-                // КЛАССИКА: СЕКТОР ЗАВИСИТ ОТ ЛЮДЕЙ | НОВОЕ: ВСЕМ ПОРОВНУ
-                let slice;
-                if(wType === 'class') {
-                    slice = (votes / (total || 1)) * (Math.PI * 2);
-                } else {
-                    slice = (Math.PI * 2) / active.length;
-                }
+                // КЛАССИКА = ШАНС ПО КОЛИЧЕСТВУ ЛЮДЕЙ | НОВОЕ = ВСЕМ ПОРОВНУ
+                let slice = (wType === 'class') ? (votes / (total || 1)) * (Math.PI * 2) : (Math.PI * 2) / active.length;
                 
                 ctx.save(); 
                 ctx.translate(275, 275); 
                 ctx.rotate(curr);
-                
                 ctx.beginPath(); 
                 ctx.moveTo(0, 0); 
                 ctx.arc(0, 0, 260, 0, slice);
                 ctx.fillStyle = 'hsl(' + d.hue + ', 65%, 45%)'; 
                 ctx.fill();
-                
                 ctx.rotate(slice / 2); 
-                ctx.fillStyle = "#ffffff"; 
+                ctx.fillStyle = "#fff"; 
                 ctx.font = "bold 15px sans-serif"; 
                 ctx.textAlign = "right";
-                
-                let nameToShow = d.name;
-                if(nameToShow.length > 15) nameToShow = nameToShow.substring(0, 13) + "...";
+                let nameToShow = d.name; if(nameToShow.length > 15) nameToShow = nameToShow.substring(0, 13) + "...";
                 ctx.fillText(nameToShow, 240, 5); 
-                
                 ctx.restore();
                 curr += slice;
             });
@@ -988,24 +1001,19 @@
         function startSpin() {
             const active = data.filter(function(item) { return item[1].active !== false; });
             if(isSpinning || active.length < 2) return;
-            
             isSpinning = true; 
             document.getElementById('simpleStatus').innerText = '';
-            
-            const duration = parseInt(document.getElementById('spinTime').value) * 1000;
+            const dur = parseInt(document.getElementById('spinTime').value) * 1000;
             const start = performance.now();
-            const power = 40 + Math.random() * 50;
-            const startRotation = rotation;
-            
-            function animate(now) {
-                const progress = Math.min((now - start) / duration, 1);
-                const ease = 1 - Math.pow(1 - progress, 4);
-                rotation = startRotation + power * ease; 
+            const pwr = 35 + Math.random() * 40;
+            const sRot = rotation;
+            function anim(now) {
+                const p = Math.min((now - start) / dur, 1);
+                const ease = 1 - Math.pow(1 - p, 4);
+                rotation = sRot + pwr * ease; 
                 drawWheel();
-                
-                if(progress < 1) {
-                    requestAnimationFrame(animate);
-                } else { 
+                if(p < 1) requestAnimationFrame(anim);
+                else { 
                     isSpinning = false; 
                     const win = getWin(); 
                     if(win) { 
@@ -1014,112 +1022,54 @@
                     }
                 }
             }
-            requestAnimationFrame(animate);
+            requestAnimationFrame(anim);
         }
 
         function getWin() {
             const active = data.filter(function(item) { return item[1].active !== false; });
             const total = active.reduce(function(a, item) { return a + (item[1].votes || 0); }, 0);
-            
-            const normalizedRotation = ((rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
-            const targetAngle = (Math.PI * 1.5 - normalizedRotation + (Math.PI * 2)) % (Math.PI * 2);
-            
-            let accumulatedAngle = 0;
+            const norm = ((rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+            const target = (Math.PI * 1.5 - norm + (Math.PI * 2)) % (Math.PI * 2);
+            let acc = 0;
             for(let i = 0; i < active.length; i++) {
-                const item = active[i];
-                const votes = item[1].votes || 0;
-                
-                let slice;
-                if(wType === 'class') {
-                    slice = (votes / (total || 1)) * (Math.PI * 2);
-                } else {
-                    slice = (Math.PI * 2) / active.length;
-                }
-                
-                if(targetAngle >= accumulatedAngle && targetAngle < accumulatedAngle + slice) {
-                    return { id: item[0], name: item[1].name };
-                }
-                accumulatedAngle += slice;
+                const votes = active[i][1].votes || 0;
+                let slice = (wType === 'class') ? (votes / (total || 1)) * (Math.PI * 2) : (Math.PI * 2) / active.length;
+                if(target >= acc && target < acc + slice) return { id: active[i][0], name: active[i][1].name };
+                acc += slice;
             }
         }
 
         function updateStatus(name, isFinal) {
-            const st = document.getElementById('simpleStatus'); 
-            if(isFinal) {
-                st.style.color = "var(--accent)";
-                st.innerText = "🏆 ПОБЕДИТЕЛЬ: " + name;
-            } else {
-                st.style.color = "var(--red)";
-                st.innerText = "❌ ВЫБЫЛ: " + name;
-            }
+            const st = document.getElementById('simpleStatus'); st.style.color = isFinal ? "var(--accent)" : "var(--red)";
+            st.innerText = isFinal ? "🏆 ПОБЕДИТЕЛЬ: " + name : "❌ ВЫБЫЛ: " + name;
             setTimeout(function() { st.innerText = ''; }, 6000);
         }
 
         /* ============================================================
-           ФУНКЦИИ ВВОДА И ВСПОМОГАТЕЛЬНЫЕ ДЕЙСТВИЯ
+           ФУНКЦИИ ВВОДА И ОБЩИЕ ДЕЙСТВИЯ
            ============================================================ */
         function addLot() { 
             const n = document.getElementById('aName').value;
             const v = parseInt(document.getElementById('aVal').value) || 1; 
             if(n) {
                 const id = "lot_" + Date.now();
-                db.ref('lots/' + id).set({ 
-                    id: id, 
-                    name: n, 
-                    votes: v, 
-                    val: v, 
-                    hue: Math.floor(Math.random() * 360), 
-                    active: true, 
-                    author: 'Admin', 
-                    uid: 'admin' 
-                });
+                db.ref('lots/' + id).set({ id: id, name: n, votes: v, val: v, hue: Math.floor(Math.random() * 360), active: true, author: 'Admin', uid: 'admin' });
             }
             document.getElementById('aName').value = '';
         }
 
         function askClearDB() { 
-            askConfirm("ПОЛНЫЙ СБРОС", "Вы действительно хотите удалить все лоты и обнулить базу? Это действие нельзя отменить.", function() { 
+            askConfirm("ПОЛНЫЙ СБРОС", "Это полностью удалит все лоты и обнулит правила. Вы уверены?", function() { 
                 db.ref('lots').remove(); 
                 db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); 
             }); 
         }
 
-        function setView(id, btn) { 
-            document.querySelectorAll('.view-section').forEach(function(s) { s.classList.remove('active'); }); 
-            document.querySelectorAll('.nav-btn').forEach(function(nb) { nb.classList.remove('active'); }); 
-            document.getElementById('view-' + id).classList.add('active'); 
-            btn.classList.add('active'); 
-        }
+        function setView(id, btn) { document.querySelectorAll('.view-section').forEach(function(s) { s.classList.remove('active'); }); document.querySelectorAll('.nav-btn').forEach(function(nb) { nb.classList.remove('active'); }); document.getElementById('view-' + id).classList.add('active'); btn.classList.add('active'); }
+        function toggleSide() { document.getElementById('sidePanel').classList.toggle('collapsed'); }
+        function updateLock() { db.ref('auction').update({ lockSettings: document.getElementById('lockVoting').checked, pass: PASS }); }
+        function up(i, t) { if(i.files[0]) { const r = new FileReader(); r.onload = function(e) { if(t === 'bg') document.getElementById('mainBody').style.backgroundImage = 'url(' + e.target.result + ')'; else { document.getElementById('logoImg').src = e.target.result; document.getElementById('logoBox').style.display = 'flex'; } }; r.readAsDataURL(i.files[0]); } }
 
-        function toggleSide() { 
-            document.getElementById('sidePanel').classList.toggle('collapsed'); 
-            const icon = document.getElementById('sideIcon');
-            icon.className = document.getElementById('sidePanel').classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left"; 
-        }
-
-        function updateLock() { 
-            db.ref('auction').update({
-                lockSettings: document.getElementById('lockVoting').checked,
-                pass: PASS
-            }); 
-        }
-
-        function up(input, type) { 
-            if(input.files[0]) { 
-                const reader = new FileReader(); 
-                reader.onload = function(e) { 
-                    if(type === 'bg') {
-                        document.getElementById('mainBody').style.backgroundImage = 'url(' + e.target.result + ')'; 
-                    } else { 
-                        document.getElementById('logoImg').src = e.target.result; 
-                        document.getElementById('logoBox').style.display = 'flex'; 
-                    } 
-                }; 
-                reader.readAsDataURL(input.files[0]); 
-            }
-        }
-
-        // ПЕРВИЧНЫЙ ЗАПУСК ТАЙМЕРА
         tUpdate();
     </script>
 </body>
