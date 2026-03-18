@@ -2,12 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - God Mode Edition</title>
+    <title>Stream Auction - Final Pro Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ */
         :root { 
             --bg: #0a0a0a; 
             --panel: #111; 
@@ -20,7 +19,7 @@
             margin: 0; 
             background: var(--bg); 
             color: #efefef; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', sans-serif; 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
@@ -28,7 +27,7 @@
             background-position: center; 
         }
 
-        /* САЙДБАР (ЛЕВО) */
+        /* САЙДБАР */
         .sidebar { 
             width: var(--sidebar-w); 
             background: #000; 
@@ -60,7 +59,6 @@
             background: rgba(0, 162, 255, 0.1); 
         }
 
-        /* ОСНОВНОЙ КОНТЕНТ */
         .app-content { 
             flex-grow: 1; 
             display: flex; 
@@ -78,7 +76,7 @@
             display: flex; 
         }
 
-        /* СПИСОК ЛОТОВ (КОЛЕСО) */
+        /* ЛЕВАЯ ПАНЕЛЬ */
         .lots-panel { 
             width: 320px; 
             background: rgba(10,10,10,0.95); 
@@ -171,7 +169,7 @@
             overflow: hidden; 
             top: 50%; 
             left: 50%; 
-            transform: translate(-50%, -10%); 
+            transform: translate(-50%, -10%);
             justify-content: center; 
             align-items: center; 
         }
@@ -182,7 +180,6 @@
             object-fit: cover; 
         }
 
-        /* КОНТРОЛЬ ПРАВО */
         .control-panel { 
             width: 280px; 
             background: rgba(14,14,14,0.9); 
@@ -204,7 +201,7 @@
             font-size: 16px; 
         }
 
-        /* АУКЦИОН СЕТКА */
+        /* АУКЦИОН */
         .auc-container { 
             display: grid; 
             grid-template-columns: 300px 1fr 340px; 
@@ -246,14 +243,14 @@
         }
 
         /* --------------------------------------------------- */
-        /* ИНТЕРФЕЙСНЫЕ ОКНА (СТЕК СПРАВА) */
+        /* НОВОЕ: ВЕРТИКАЛЬНЫЙ СТЕК ИНТЕРФЕЙСОВ (ПРАВАЯ ЧАСТЬ) */
         /* --------------------------------------------------- */
 
-        /* 1. КРАСНАЯ ЗОНА: ОШИБКИ / ВАРНИНГИ (ВЕРХ) */
+        /* 1. ВЕРХ (КРАСНАЯ ЗОНА): ОШИБКИ И БАН */
         #error-overlay { 
             display: none; 
             position: fixed; 
-            top: 20px; 
+            top: 250px; /* ПОД ТАЙМЕРОМ */
             right: 25px; 
             width: 300px; 
             background: #111; 
@@ -264,11 +261,11 @@
             box-shadow: 0 10px 40px #000; 
         }
 
-        /* 2. ИНФО-ЗОНА: КТО ГОЛОСОВАЛ (СЕРЕДИНА) */
+        /* 2. СЕРЕДИНА: КТО ГОЛОСОВАЛ (ИНФО) */
         #voters-overlay { 
             display: none; 
             position: fixed; 
-            bottom: 220px; /* Между онлайном и верхом */
+            bottom: 220px; /* МЕЖДУ НИЗОМ И ВЕРХОМ */
             right: 25px; 
             width: 300px; 
             max-height: 350px; 
@@ -281,7 +278,7 @@
             overflow-y: auto; 
         }
 
-        /* 3. СИНЯЯ ЗОНА: ОНЛАЙН (НИЗ) */
+        /* 3. НИЗ (СИНЯЯ ЗОНА): СЧЕТЧИК ОНЛАЙНА */
         #online-overlay { 
             display: none; 
             position: fixed; 
@@ -296,8 +293,8 @@
             box-shadow: 0 10px 40px #000; 
         }
 
-        /* ОБЩИЕ СТИЛИ СТРОК */
-        .ui-row { 
+        /* СТИЛИ ДЛЯ СТРОК ВНУТРИ ПОПАПОВ */
+        .pop-row { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -312,9 +309,8 @@
             font-size: 16px; 
             transition: 0.2s; 
         }
-        .ban-ico-btn:hover { transform: scale(1.2); }
 
-        /* ИКОНКА АВАТАРКИ В ЛОТЕ */
+        /* ИКОНКА АВАТАРКИ (ИЗ СКРИНА) */
         .vote-avatar-box { 
             background: #fff; 
             color: #000; 
@@ -330,7 +326,7 @@
             font-weight: bold;
         }
 
-        /* ЦЕНТРАЛЬНАЯ МОДАЛКА (ДА/НЕТ) */
+        /* ЦЕНТРАЛЬНАЯ МОДАЛКА (ПОДТВЕРЖДЕНИЕ) */
         .modal-blur { 
             display: none; 
             position: fixed; 
@@ -383,10 +379,10 @@
 </head>
 <body id="mainBody">
 
-    <!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ -->
+    <!-- МОДАЛКА (ЦЕНТР ЭКРАНА) -->
     <div id="modalOverlay" class="modal-blur"></div>
     <div id="confirmModal" class="confirm-modal">
-        <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">СИСТЕМНЫЙ ЗАПРОС</h3>
+        <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">СИСТЕМА</h3>
         <p id="mText" style="color:#bbb; line-height:1.5; font-size:15px;"></p>
         <div class="modal-btns">
             <button class="m-btn m-no" onclick="closeConfirm()">ОТМЕНА</button>
@@ -394,28 +390,28 @@
         </div>
     </div>
 
-    <!-- 1. ВЕРХ: ОШИБКИ -->
+    <!-- 1. ВЕРХНИЙ ПОПАП: ОШИБКИ / БАН -->
     <div id="error-overlay">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="color:var(--red); font-weight:bold; font-size:11px;">КРИТИЧЕСКАЯ ОШИБКА</span>
+            <span style="color:var(--red); font-weight:bold; font-size:11px; letter-spacing:1px;">УВЕДОМЛЕНИЕ / ОШИБКА</span>
             <i class="fas fa-times" onclick="closeError()" style="cursor:pointer; color:#444;"></i>
         </div>
-        <div id="errorDisplay" style="color:#fff; font-size:14px; font-weight:bold;"></div>
+        <div id="errorDisplay" style="color:#fff; font-size:14px; font-weight:bold; text-transform:uppercase;"></div>
     </div>
 
-    <!-- 2. СЕРЕДИНА: КТО ГОЛОСОВАЛ -->
+    <!-- 2. СРЕДНИЙ ПОПАП: КТО ГОЛОСОВАЛ -->
     <div id="voters-overlay">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
-            <span id="vTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ДЕТАЛИ ГОЛОСОВАНИЯ</span>
+            <span id="vTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ИНФОРМАЦИЯ О ЛОТЕ</span>
             <i class="fas fa-times" onclick="closeVoters()" style="cursor:pointer; color:#555;"></i>
         </div>
         <div id="vListContent"></div>
     </div>
 
-    <!-- 3. НИЗ: ОНЛАЙН -->
+    <!-- 3. НИЖНИЙ ПОПАП: ОНЛАЙН -->
     <div id="online-overlay">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
-            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС В СЕТИ</span>
+            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС ОНЛАЙН</span>
             <i class="fas fa-times" onclick="closeOnline()" style="cursor:pointer; color:#444;"></i>
         </div>
         <div id="onlineNamesBox" style="font-size:13px; color:#ccc; line-height:1.6; max-height:180px; overflow-y:auto;"></div>
@@ -429,7 +425,7 @@
     </aside>
 
     <main class="app-content">
-        <!-- СЕКЦИЯ: КОЛЕСО -->
+        <!-- ВИД: КОЛЕСО -->
         <section id="view-wheel" class="view-section active">
             <div class="lots-panel" id="sidePanel">
                 <div class="toggle-trigger" onclick="toggleSide()"><i class="fas fa-chevron-left" id="sideIcon"></i></div>
@@ -466,7 +462,7 @@
             </div>
         </section>
 
-        <!-- СЕКЦИЯ: АУКЦИОН -->
+        <!-- ВИД: АУКЦИОН -->
         <section id="view-auc" class="view-section" style="flex-direction:column;">
             <div class="auc-container">
                 <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
@@ -478,20 +474,29 @@
                     <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
                         <input type="text" id="aName" placeholder="Название лота..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
                         <input type="number" id="aVal" value="1" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:8px;">
-                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-plus"></i></button>
+                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px;">+</button>
                     </div>
                     <div id="aucList" style="flex:1; overflow-y:auto;"></div>
                 </div>
 
                 <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace; letter-spacing: 2px;">00:00:10:00</div>
+                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace;">00:00:10:00</div>
                     <div class="timer-input-group">
                         <input type="number" id="tDays" placeholder="Дни" value="0">
                         <input type="number" id="tHours" placeholder="Часы" value="0">
                         <input type="number" id="tMins" placeholder="Мин" value="10">
                     </div>
                     <button onclick="applyTimer()" style="width:100%; background:#222; border:none; color:#aaa; padding:8px; margin-bottom:15px; border-radius:4px; font-size:11px; cursor:pointer;">УСТАНОВИТЬ ВРЕМЯ</button>
-                    <label style="display:block; margin-bottom:15px; font-size:12px; color:var(--red); cursor:pointer;"><input type="checkbox" id="lockVoting" onchange="updateLock()"> Блокировать по окончанию</label>
+                    
+                    <label style="display:block; margin-bottom:10px; font-size:12px; color:#777; cursor:pointer;">
+                        <input type="checkbox" id="lockVoting" onchange="updateLock()"> Блокировать по окончанию
+                    </label>
+
+                    <!-- НОВОЕ: МГНОВЕННОЕ УДАЛЕНИЕ -->
+                    <label style="display:block; margin-bottom:15px; font-size:12px; color:var(--red); cursor:pointer; font-weight:bold;">
+                        <input type="checkbox" id="instantDelete"> МГНОВЕННОЕ УДАЛЕНИЕ
+                    </label>
+
                     <div style="display:flex; justify-content:center; gap:20px; font-size:24px; color:#444;">
                         <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
@@ -512,7 +517,7 @@
             </div>
         </section>
 
-        <!-- ЧЕРНЫЙ СПИСОК -->
+        <!-- ВИД: ЧЕРНЫЙ СПИСОК -->
         <section id="view-vip" class="view-section" style="flex-direction:column; padding:40px;">
             <h2 style="color:var(--red);"><i class="fas fa-user-slash"></i> ЧЕРНЫЙ СПИСОК</h2>
             <div id="banList" style="max-width: 600px; overflow-y: auto;"></div>
@@ -523,8 +528,11 @@
     </main>
 
     <script>
-        // FIREBASE КОНФИГ
-        const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
+        // --- ИНИЦИАЛИЗАЦИЯ FIREBASE ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", 
+            databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -532,7 +540,7 @@
         let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'class';
         let tSec = 600, tInt = null, onlineUsers = {};
 
-        // --- ФУНКЦИИ ИНТЕРФЕЙСА (СТЕК ОКОН) ---
+        // --- УПРАВЛЕНИЕ ИНТЕРФЕЙСАМИ (СТЕК) ---
         function askConfirm(title, text, confirmCallback) {
             document.getElementById('mTitle').innerText = title;
             document.getElementById('mText').innerText = text;
@@ -540,55 +548,83 @@
             document.getElementById('modalOverlay').style.display = 'block';
             document.getElementById('mConfirmBtn').onclick = () => { confirmCallback(); closeConfirm(); };
         }
-        function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; document.getElementById('modalOverlay').style.display = 'none'; }
+
+        function closeConfirm() { 
+            document.getElementById('confirmModal').style.display = 'none'; 
+            document.getElementById('modalOverlay').style.display = 'none'; 
+        }
         
+        function openPopup(title, html) { 
+            document.getElementById('vTitle').innerText = title; 
+            document.getElementById('vListContent').innerHTML = html; 
+            document.getElementById('voters-overlay').style.display = 'block'; 
+        }
+
+        function closeVoters() { 
+            document.getElementById('voters-overlay').style.display = 'none'; 
+        }
+
         function showOnlineList() {
             const el = document.getElementById('online-overlay');
             if(el.style.display === 'block') return closeOnline();
-            const names = Object.values(onlineUsers).map(u => `<div class="ui-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
+            const names = Object.values(onlineUsers).map(u => `<div class="pop-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
             document.getElementById('onlineNamesBox').innerHTML = names || "В сети никого нет";
             el.style.display = 'block';
         }
-        function closeOnline() { document.getElementById('online-overlay').style.display = 'none'; }
+
+        function closeOnline() { 
+            document.getElementById('online-overlay').style.display = 'none'; 
+        }
 
         function showError(text) {
             document.getElementById('errorDisplay').innerText = text;
             document.getElementById('error-overlay').style.display = 'block';
             setTimeout(closeError, 5000);
         }
-        function closeError() { document.getElementById('error-overlay').style.display = 'none'; }
+
+        function closeError() { 
+            document.getElementById('error-overlay').style.display = 'none'; 
+        }
 
         function showLotDetails(id, name, voters) {
             if(!voters) {
-                document.getElementById('vTitle').innerText = "ИНФО: " + name;
-                document.getElementById('vListContent').innerHTML = "<div class='ui-row'>Пока голосов нет</div>";
+                openPopup("ИНФО: " + name, "<div class='pop-row'>Пока голосов нет</div>");
             } else {
-                document.getElementById('vTitle').innerText = "ГОЛОСОВАЛИ ЗА: " + name;
                 const html = Object.entries(voters).map(([uid, username]) => `
-                    <div class="ui-row">
+                    <div class="pop-row">
                         <span>${username}</span>
                         <i class="fas fa-user-slash mini-ban-btn" onclick="askBanUser('${uid}', '${username}')"></i>
                     </div>`).join('');
-                document.getElementById('vListContent').innerHTML = html;
+                openPopup("ГОЛОСОВАЛИ ЗА: " + name, html);
             }
-            document.getElementById('voters-overlay').style.display = 'block';
         }
-        function closeVoters() { document.getElementById('voters-overlay').style.display = 'none'; }
 
         // --- ЛОГИКА БАЗЫ ---
-        db.ref('lots').on('value', s => { data = s.val() ? Object.entries(s.val()) : []; renderAll(); });
+        db.ref('lots').on('value', s => { 
+            data = s.val() ? Object.entries(s.val()) : []; 
+            renderAll(); 
+        });
+
         db.ref('bans').on('value', s => {
             const list = document.getElementById('banList'), bans = s.val() || {};
             list.innerHTML = '';
             Object.entries(bans).forEach(([uid, name]) => {
-                list.innerHTML += `<div class="ui-row" style="background:#161616; padding:12px; margin-bottom:6px; border-radius:8px;">
-                    <span><b>${name}</b> (ID: ${uid})</span>
-                    <button style="background:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
-                </div>`;
+                list.innerHTML += `
+                    <div class="pop-row" style="background:#161616; padding:12px; margin-bottom:6px; border-radius:8px; border-left:3px solid var(--red);">
+                        <span><b>${name}</b> (ID: ${uid})</span>
+                        <button style="background:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
+                    </div>`;
             });
         });
-        db.ref('presence').on('value', s => { onlineUsers = s.val() || {}; document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length; });
-        db.ref('auction/rules').once('value', s => { if(s.val()) document.getElementById('rulesArea').innerText = s.val(); });
+
+        db.ref('presence').on('value', s => { 
+            onlineUsers = s.val() || {}; 
+            document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length; 
+        });
+
+        db.ref('auction/rules').once('value', s => { 
+            if(s.val()) document.getElementById('rulesArea').innerText = s.val(); 
+        });
 
         function askBanUser(uid, name) {
             if(uid === 'admin' || name === 'Admin' || uid === 'undefined') {
@@ -602,7 +638,9 @@
         let rulesTimer;
         function saveRules() { 
             clearTimeout(rulesTimer); 
-            rulesTimer = setTimeout(() => { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }, 500); 
+            rulesTimer = setTimeout(() => { 
+                db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); 
+            }, 500); 
         }
 
         function renderAll() {
@@ -616,36 +654,47 @@
                 const p = total > 0 ? ((votes/total)*100).toFixed(1) : 0;
                 
                 if(!(d.active === false && hide)) {
-                    wl.innerHTML += `<div class="lot-item ${d.active === false ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
-                        <span style="flex:1; overflow:hidden;">${d.name}</span>
-                        ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
-                        <b>${votes}</b>
-                    </div>`;
+                    wl.innerHTML += `
+                        <div class="lot-item ${d.active === false ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
+                            <span style="flex:1; overflow:hidden;">${d.name}</span>
+                            ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
+                            <b>${votes}</b>
+                        </div>`;
                 }
 
-                al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
-                    <div style="display:flex; align-items:center;">
-                        <span style="width:30px; color:#333;">${i+1}</span>
-                        <span style="flex:1; font-weight:bold;">${d.name}</span>
-                        <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                        <span style="margin-right:15px; cursor:pointer;" onclick='showLotDetails("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
-                            ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
-                        </span>
-                        <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBanUser('${d.uid || d.authorId}', '${d.author}')"></i>
-                        <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="safeDeleteLot('${id}')"></i>
-                    </div>
-                    <div style="font-size:10px; color:#555; padding-left:30px; margin-top:3px;">Автор: ${d.author || 'Admin'}</div>
-                </div>`;
+                al.innerHTML += `
+                    <div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
+                        <div style="display:flex; align-items:center;">
+                            <span style="width:30px; color:#333;">${i+1}</span>
+                            <span style="flex:1; font-weight:bold;">${d.name}</span>
+                            <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
+                            <span style="margin-right:15px; cursor:pointer;" onclick='showLotDetails("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
+                                ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
+                            </span>
+                            <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBanUser('${d.uid || d.authorId}', '${d.author}')"></i>
+                            <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="handleDeleteLot('${id}')"></i>
+                        </div>
+                        <div style="font-size:10px; color:#555; padding-left:30px; margin-top:3px;">Автор: ${d.author || 'Admin'}</div>
+                    </div>`;
             });
             drawWheel();
         }
 
-        function safeDeleteLot(id) {
-            askConfirm("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Все проголосовавшие за него смогут проголосовать снова.", () => {
-                db.ref('users').once('value', snap => {
-                    snap.forEach(u => { if(u.val().votedFor === id) db.ref('users/' + u.key).update({ voted: false, votedFor: null }); });
-                    db.ref('lots/' + id).remove();
+        function handleDeleteLot(id) {
+            const instant = document.getElementById('instantDelete').checked;
+            if(instant) { 
+                executeLotDelete(id); 
+            } else { 
+                askConfirm("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса вернутся пользователям, и они смогут проголосовать снова.", () => executeLotDelete(id)); 
+            }
+        }
+
+        function executeLotDelete(id) {
+            db.ref('users').once('value', snap => {
+                snap.forEach(u => { 
+                    if(u.val().votedFor === id) db.ref('users/' + u.key).update({ voted: false, votedFor: null }); 
                 });
+                db.ref('lots/' + id).remove();
             });
         }
 
@@ -657,6 +706,7 @@
             tSec = (d * 86400) + (h * 3600) + (m * 60); 
             tUpdate();
         }
+
         function tUpdate() { 
             const d = Math.floor(tSec / 86400);
             const h = Math.floor((tSec % 86400) / 3600);
@@ -666,39 +716,77 @@
             db.ref('auction').update({ timer: tSec, pass: PASS });
             db.ref('auction/votingClosed').set(tSec <= 0 && document.getElementById('lockVoting').checked);
         }
+
         function tToggle() { 
-            const b=document.getElementById('tPlay'); 
-            if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
-            else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();} else { clearInterval(tInt); tInt=null; b.className="fas fa-play"; }},1000); b.className="fas fa-pause";} 
+            const b = document.getElementById('tPlay'); 
+            if(tInt) { 
+                clearInterval(tInt); 
+                tInt = null; 
+                b.className = "fas fa-play"; 
+            } else { 
+                tInt = setInterval(() => { 
+                    if(tSec > 0) { 
+                        tSec--; 
+                        tUpdate(); 
+                    } else { 
+                        clearInterval(tInt); 
+                        tInt = null; 
+                        b.className = "fas fa-play"; 
+                    } 
+                }, 1000); 
+                b.className = "fas fa-pause"; 
+            } 
         }
-        function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
-        function tReset() { tSec=600; tUpdate(); }
+
+        function tMod(v) { 
+            tSec = Math.max(0, tSec + v); 
+            tUpdate(); 
+        }
+
+        function tReset() { 
+            tSec = 600; 
+            tUpdate(); 
+        }
 
         // --- ЛОГИКА КОЛЕСА (ЭЛИТНАЯ КЛАССИКА) ---
         function setWType(t) { 
             wType = t; 
-            document.getElementById('tNew').classList.toggle('active', t==='new');
-            document.getElementById('tClass').classList.toggle('active', t==='class');
+            document.getElementById('tNew').classList.toggle('active', t === 'new');
+            document.getElementById('tClass').classList.toggle('active', t === 'class');
             drawWheel(); 
         }
-        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
+
+        function togglePct() { 
+            showPct = !showPct; 
+            document.getElementById('pBtn').classList.toggle('active'); 
+            renderAll(); 
+        }
 
         function drawWheel() {
             const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
-            ctx.clearRect(0,0,550,550);
+            ctx.clearRect(0, 0, 550, 550);
             const active = data.filter(([id,d]) => d.active !== false);
             if(!active.length) return;
-            const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
+            const total = active.reduce((a, [id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
                 const votes = d.votes || d.val || 0;
-                // КЛАССИКА = ШАНС ПО КОЛИЧЕСТВУ ЛЮДЕЙ, НОВОЕ = ВСЕМ ПОРОВНУ (РАНДОМ)
+                // КЛАССИКА: РАЗМЕР ЗАВИСИТ ОТ ЛЮДЕЙ, НОВОЕ: ПОРОВНУ
                 const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
-                ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
-                ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
-                ctx.fillStyle = `hsl(${d.hue},65%,45%)`; ctx.fill();
-                ctx.rotate(slice/2); ctx.fillStyle="#fff"; ctx.font="bold 14px sans-serif"; ctx.textAlign="right";
-                ctx.fillText(d.name.length > 16 ? d.name.substring(0, 14) + '...' : d.name, 240, 5); ctx.restore();
+                ctx.save(); 
+                ctx.translate(275, 275); 
+                ctx.rotate(curr);
+                ctx.beginPath(); 
+                ctx.moveTo(0, 0); 
+                ctx.arc(0, 0, 260, 0, slice);
+                ctx.fillStyle = `hsl(${d.hue}, 65%, 45%)`; 
+                ctx.fill();
+                ctx.rotate(slice/2); 
+                ctx.fillStyle = "#fff"; 
+                ctx.font = "bold 14px sans-serif"; 
+                ctx.textAlign = "right";
+                ctx.fillText(d.name.length > 16 ? d.name.substring(0, 14) + '...' : d.name, 240, 5); 
+                ctx.restore();
                 curr += slice;
             });
         }
@@ -706,62 +794,100 @@
         function startSpin() {
             const active = data.filter(([id,d]) => d.active !== false);
             if(isSpinning || active.length < 2) return;
-            isSpinning = true; document.getElementById('simpleStatus').innerText = '';
-            const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 35 + Math.random()*40, sRot = rotation;
+            isSpinning = true; 
+            document.getElementById('simpleStatus').innerText = '';
+            const dur = parseInt(document.getElementById('spinTime').value) * 1000;
+            const start = performance.now();
+            const pwr = 35 + Math.random() * 40;
+            const sRot = rotation;
             function anim(now) {
-                const p = Math.min((now-start)/dur, 1), ease = 1 - Math.pow(1-p, 4);
-                rotation = sRot + pwr * ease; drawWheel();
+                const p = Math.min((now - start) / dur, 1);
+                const ease = 1 - Math.pow(1 - p, 4);
+                rotation = sRot + pwr * ease; 
+                drawWheel();
                 if(p < 1) requestAnimationFrame(anim);
-                else { isSpinning = false; const win = getWin(); if(win) { updateStatus(win.name, active.length === 2); db.ref('lots/'+win.id).update({active: false}); }}
+                else { 
+                    isSpinning = false; 
+                    const win = getWin(); 
+                    if(win) { 
+                        updateStatus(win.name, data.filter(d => d[1].active !== false).length === 2); 
+                        db.ref('lots/' + win.id).update({ active: false }); 
+                    }
+                }
             }
             requestAnimationFrame(anim);
         }
 
         function getWin() {
-            const active = data.filter(([id,d]) => d.active !== false), total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
-            const norm = ((rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2), target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
+            const active = data.filter(([id,d]) => d.active !== false);
+            const total = active.reduce((a, [id,d]) => a + (d.votes || d.val || 0), 0);
+            const norm = ((rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+            const target = (Math.PI * 1.5 - norm + (Math.PI * 2)) % (Math.PI * 2);
             let cur = 0;
             for(const [id, d] of active) {
                 const votes = d.votes || d.val || 0;
-                const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
-                if(target >= cur && target < cur + slice) return {id, name: d.name};
+                const slice = wType === 'class' ? (votes/total) * (Math.PI * 2) : (Math.PI * 2) / active.length;
+                if(target >= cur && target < cur + slice) return { id, name: d.name };
                 cur += slice;
             }
         }
 
         function updateStatus(name, isFinal) {
-            const st = document.getElementById('simpleStatus'); st.style.color = isFinal ? "var(--accent)" : "var(--red)";
+            const st = document.getElementById('simpleStatus'); 
+            st.style.color = isFinal ? "var(--accent)" : "var(--red)";
             st.innerText = isFinal ? "🏆 ПОБЕДИТЕЛЬ: " + name : "❌ ВЫБЫЛ: " + name;
             setTimeout(() => { st.innerText = ''; }, 4000);
         }
 
         function addLot() { 
-            const n=document.getElementById('aName').value, v=parseInt(document.getElementById('aVal').value)||1; 
-            if(n) db.ref('lots/' + Date.now()).set({ id: Date.now(), name: n, votes: v, val: v, hue: Math.random()*360, active: true, author: 'Admin', uid: 'admin' });
+            const n = document.getElementById('aName').value;
+            const v = parseInt(document.getElementById('aVal').value) || 1; 
+            if(n) {
+                const id = Date.now();
+                db.ref('lots/' + id).set({ 
+                    id: id, name: n, votes: v, val: v, hue: Math.random() * 360, 
+                    active: true, author: 'Admin', uid: 'admin' 
+                });
+            }
             document.getElementById('aName').value = '';
         }
 
         function askClearDB() { 
-            askConfirm("СБРОС БАЗЫ", "ВНИМАНИЕ! Вы собираетесь очистить все лоты и обнулить правила. Это действие нельзя отменить. Вы уверены?", () => { 
+            askConfirm("СБРОС БАЗЫ", "ВНИМАНИЕ! Это полностью удалит все лоты и правила. Вы уверены?", () => { 
                 db.ref('lots').remove(); 
                 db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); 
             }); 
         }
 
-        function setView(id, b) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active'); 
-            b.classList.add('active');
+        function setView(id, b) { 
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); 
+            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active')); 
+            document.getElementById('view-' + id).classList.add('active'); 
+            b.classList.add('active'); 
         }
 
-        function toggleSide() {
-            const p = document.getElementById('sidePanel'); p.classList.toggle('collapsed');
-            document.getElementById('sideIcon').className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
+        function toggleSide() { 
+            document.getElementById('sidePanel').classList.toggle('collapsed'); 
+            document.getElementById('sideIcon').className = document.getElementById('sidePanel').classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left"; 
         }
 
-        function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
-        function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
+        function updateLock() { 
+            db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); 
+        }
+
+        function up(i, t) { 
+            if(i.files[0]) { 
+                const r = new FileReader(); 
+                r.onload = e => { 
+                    if(t === 'bg') document.getElementById('mainBody').style.backgroundImage = `url(${e.target.result})`; 
+                    else { 
+                        document.getElementById('logoImg').src = e.target.result; 
+                        document.getElementById('logoBox').style.display = 'flex'; 
+                    } 
+                }; 
+                r.readAsDataURL(i.files[0]); 
+            }
+        }
 
         tUpdate();
     </script>
