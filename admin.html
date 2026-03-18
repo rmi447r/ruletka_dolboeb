@@ -7,73 +7,353 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #0a0a0a; --panel: #111; --accent: #00a2ff; --red: #ff4b4b; --sidebar-w: 60px; }
-        body { margin: 0; background: var(--bg); color: #efefef; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; background-size: cover; background-position: center; }
-        
-        .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid #1a1a1a; z-index: 100; }
-        .nav-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 10px; cursor: pointer; color: #444; transition: 0.3s; background: none; border: none; }
-        .nav-btn.active { color: var(--accent); background: rgba(0, 162, 255, 0.1); }
-        
-        .app-content { flex-grow: 1; display: flex; position: relative; overflow: hidden; }
-        .view-section { display: none; width: 100%; height: 100%; }
-        .view-section.active { display: flex; }
-        
-        .lots-panel { width: 320px; background: rgba(10,10,10,0.95); padding: 20px; border-right: 1px solid #1a1a1a; transition: transform 0.4s ease; position: relative; display: flex; flex-direction: column; z-index: 50; }
-        .lots-panel.collapsed { transform: translateX(-320px); }
-        .toggle-trigger { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); background: #1a1a1a; color: var(--accent); width: 30px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 0 8px 8px 0; border: 1px solid #333; z-index: 60; }
-        
-        .lot-item { display: flex; align-items: center; padding: 10px; background: #161616; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--accent); font-size: 13px; }
-        .lot-item.out { opacity: 0.2; text-decoration: line-through; filter: grayscale(1); }
-        
-        .wheel-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #simpleStatus { height: 40px; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
-        .marker { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid var(--red); z-index: 30; margin-bottom: 5px; }
-        
-        .center-logo-box { position: absolute; width: 85px; height: 85px; background: #000; border-radius: 50%; border: 3px solid #222; z-index: 40; display: none; overflow: hidden; top: 50%; left: 50%; transform: translate(-50%, -10%); justify-content: center; align-items: center; }
-        .center-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        :root { 
+            --bg: #0a0a0a; 
+            --panel: #111; 
+            --accent: #00a2ff; 
+            --red: #ff4b4b; 
+            --sidebar-w: 60px; 
+        }
 
-        .control-panel { width: 280px; background: rgba(14,14,14,0.9); padding: 15px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; }
-        .btn-spin { background: var(--red); border: none; color: #fff; padding: 15px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
+        body { 
+            margin: 0; 
+            background: var(--bg); 
+            color: #efefef; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            background-size: cover; 
+            background-position: center; 
+        }
+
+        /* САЙДБАР */
+        .sidebar { 
+            width: var(--sidebar-w); 
+            background: #000; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-top: 20px; 
+            border-right: 1px solid #1a1a1a; 
+            z-index: 100; 
+        }
+
+        .nav-btn { 
+            width: 42px; 
+            height: 42px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 15px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            color: #444; 
+            transition: 0.3s; 
+            background: none; 
+            border: none; 
+        }
+
+        .nav-btn.active { 
+            color: var(--accent); 
+            background: rgba(0, 162, 255, 0.1); 
+        }
+
+        .app-content { 
+            flex-grow: 1; 
+            display: flex; 
+            position: relative; 
+            overflow: hidden; 
+        }
+
+        .view-section { 
+            display: none; 
+            width: 100%; 
+            height: 100%; 
+        }
+
+        .view-section.active { 
+            display: flex; 
+        }
+
+        /* ЛЕВАЯ ПАНЕЛЬ ЛОТОВ */
+        .lots-panel { 
+            width: 320px; 
+            background: rgba(10,10,10,0.95); 
+            padding: 20px; 
+            border-right: 1px solid #1a1a1a; 
+            transition: transform 0.4s ease; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 50; 
+        }
+
+        .lots-panel.collapsed { 
+            transform: translateX(-320px); 
+        }
+
+        .toggle-trigger { 
+            position: absolute; 
+            right: -30px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: #1a1a1a; 
+            color: var(--accent); 
+            width: 30px; 
+            height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border-radius: 0 8px 8px 0; 
+            border: 1px solid #333; 
+            z-index: 60; 
+        }
+
+        .lot-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 10px; 
+            background: #161616; 
+            border-radius: 6px; 
+            margin-bottom: 6px; 
+            border-left: 3px solid var(--accent); 
+            font-size: 13px; 
+        }
+
+        .lot-item.out { 
+            opacity: 0.2; 
+            text-decoration: line-through; 
+            filter: grayscale(1); 
+        }
+
+        /* ЗОНА КОЛЕСА */
+        .wheel-zone { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+        }
+
+        #simpleStatus { 
+            height: 40px; 
+            font-size: 22px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 10px; 
+            letter-spacing: 1px; 
+        }
+
+        .marker { 
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent; 
+            border-right: 15px solid transparent; 
+            border-top: 30px solid var(--red); 
+            z-index: 30; 
+            margin-bottom: 5px; 
+        }
         
-        .auc-container { display: grid; grid-template-columns: 300px 1fr 340px; gap: 15px; padding: 20px; width: 100%; height: calc(100% - 60px); box-sizing: border-box; }
-        .auc-footer { height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; width: 100%; position: absolute; bottom: 0; box-sizing: border-box; }
+        .center-logo-box { 
+            position: absolute; 
+            width: 85px; 
+            height: 85px; 
+            background: #000; 
+            border-radius: 50%; 
+            border: 3px solid #222; 
+            z-index: 40; 
+            display: none; 
+            overflow: hidden; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -10%); 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        .center-logo-box img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        /* УПРАВЛЕНИЕ */
+        .control-panel { 
+            width: 280px; 
+            background: rgba(14,14,14,0.9); 
+            padding: 15px; 
+            border-left: 1px solid #1a1a1a; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        .btn-spin { 
+            background: var(--red); 
+            border: none; 
+            color: #fff; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+
+        /* АУКЦИОН */
+        .auc-container { 
+            display: grid; 
+            grid-template-columns: 300px 1fr 340px; 
+            gap: 15px; 
+            padding: 20px; 
+            width: 100%; 
+            height: calc(100% - 60px); 
+            box-sizing: border-box; 
+        }
+
+        .auc-footer { 
+            height: 60px; 
+            background: #000; 
+            border-top: 1px solid #1a1a1a; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 20px; 
+            width: 100%; 
+            position: absolute; 
+            bottom: 0; 
+            box-sizing: border-box; 
+        }
         
-        .timer-input-group { display: flex; gap: 5px; margin-bottom: 10px; }
-        .timer-input-group input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 5px; text-align: center; border-radius: 4px; }
+        .timer-input-group { 
+            display: flex; 
+            gap: 5px; 
+            margin-bottom: 10px; 
+        }
+
+        .timer-input-group input { 
+            width: 100%; 
+            background: #000; 
+            border: 1px solid #333; 
+            color: #fff; 
+            padding: 5px; 
+            text-align: center; 
+            border-radius: 4px; 
+        }
         
-        /* КАСТОМНЫЕ ОКНА (МОДАЛКИ) */
-        .custom-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: #111; border: 1px solid var(--accent); border-radius: 12px; padding: 20px; z-index: 2000; box-shadow: 0 0 50px #000; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1999; }
-        .modal-btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        /* ЭЛИТНЫЕ МОДАЛКИ (ВМЕСТО АЛЕРТОВ) */
+        .custom-modal { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 350px; 
+            background: #111; 
+            border: 1px solid var(--accent); 
+            border-radius: 12px; 
+            padding: 25px; 
+            z-index: 2000; 
+            box-shadow: 0 0 50px #000; 
+        }
+
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 1999; 
+        }
+
+        .modal-btn { 
+            padding: 12px 25px; 
+            border-radius: 6px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            text-transform: uppercase; 
+        }
+
         .btn-confirm { background: var(--red); color: #fff; }
-        .btn-cancel { background: #333; color: #ccc; margin-left: 10px; }
+        .btn-cancel { background: #222; color: #888; margin-right: 10px; }
 
-        /* ОКНО ОНЛАЙНА / СПИСКА ЮЗЕРОВ */
-        #ui-popup { display: none; position: fixed; bottom: 75px; right: 25px; width: 280px; max-height: 400px; background: #111; border: 1px solid var(--accent); border-radius: 10px; padding: 15px; z-index: 1000; box-shadow: 0 0 30px #000; overflow-y: auto; }
-        .popup-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #222; font-size: 13px; }
-        .mini-ban-btn { color: var(--red); cursor: pointer; font-size: 14px; }
+        /* ОКНО ОНЛАЙНА / КТО ГОЛОСОВАЛ */
+        #ui-popup { 
+            display: none; 
+            position: fixed; 
+            bottom: 90px; 
+            right: 25px; 
+            width: 300px; 
+            max-height: 400px; 
+            background: #111; 
+            border: 1px solid var(--accent); 
+            border-radius: 10px; 
+            padding: 15px; 
+            z-index: 1000; 
+            box-shadow: 0 0 30px #000; 
+            overflow-y: auto; 
+        }
+
+        .popup-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #222; 
+            font-size: 14px; 
+        }
+
+        .mini-ban-btn { 
+            color: var(--red); 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: 0.2s;
+        }
+
+        .mini-ban-btn:hover { transform: scale(1.2); }
+
+        /* Иконка челика из Твоего скрина */
+        .vote-avatar-box { 
+            background: #fff; 
+            color: #000; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 10px; 
+            margin-left: 8px; 
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body id="mainBody">
 
-    <!-- ФОНОВЫЙ СЛОЙ ДЛЯ МОДАЛОК -->
+    <!-- ФОН МОДАЛОК -->
     <div id="modalOverlay" class="modal-overlay"></div>
 
-    <!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ -->
+    <!-- МОДАЛКА ДЛЯ БАНА И УДАЛЕНИЯ -->
     <div id="confirmModal" class="custom-modal">
-        <h3 id="modalTitle" style="margin-top:0; color:var(--accent);">ВНИМАНИЕ</h3>
-        <p id="modalText" style="font-size:14px; color:#ccc;"></p>
+        <h3 id="modalTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">ВНИМАНИЕ</h3>
+        <p id="modalText" style="line-height:1.5; color:#ccc;"></p>
         <div style="display:flex; justify-content: flex-end;">
             <button class="modal-btn btn-cancel" onclick="closeModal()">ОТМЕНА</button>
             <button id="modalConfirmBtn" class="modal-btn btn-confirm">ДА</button>
         </div>
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО (ОНЛАЙН И СПИСОК ЮЗЕРОВ) -->
+    <!-- ПОПАП ДЛЯ ОНЛАЙНА И СПИСКА ЮЗЕРОВ -->
     <div id="ui-popup">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
-            <span id="popupTitle" style="font-size:11px; font-weight:bold; color:var(--accent);">СПИСОК</span>
-            <i class="fas fa-times" onclick="closePopup()" style="cursor:pointer;"></i>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
+            <span id="popupTitle" style="font-size:12px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ИНФОРМАЦИЯ</span>
+            <i class="fas fa-times" onclick="closePopup()" style="cursor:pointer; color:#555;"></i>
         </div>
         <div id="popupContent"></div>
     </div>
@@ -107,7 +387,14 @@
                 <button class="btn-spin" onclick="startSpin()">КРУТИТЬ</button>
                 <div style="font-size: 10px; color: #333;">ВРЕМЯ (СЕК)</div>
                 <input type="number" id="spinTime" style="background:#000; border:1px solid #222; color:#fff; padding:8px; border-radius:5px;" value="5">
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                
+                <div style="font-size: 10px; color: #333; margin-top: 10px;">ТИП КОЛЕСА</div>
+                <div style="display: flex; gap: 5px;">
+                    <button id="tNew" class="nav-btn" style="flex:1; font-size:11px;" onclick="setWType('new')">Новое</button>
+                    <button id="tClass" class="nav-btn active" style="flex:1; font-size:11px;" onclick="setWType('class')">Классика</button>
+                </div>
+                
+                <div style="display: flex; gap: 5px;">
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fBg').click()">ФОН</button>
                     <button class="nav-btn" style="flex:1; font-size:11px; border:1px solid #222;" onclick="document.getElementById('fLogo').click()">ЛОГО</button>
                 </div>
@@ -132,7 +419,7 @@
                 </div>
 
                 <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:40px; font-weight:bold; margin-bottom:15px; font-family: monospace;">00:00:10:00</div>
+                    <div id="tDisp" style="font-size:38px; font-weight:bold; margin-bottom:15px; font-family: monospace; letter-spacing: 2px;">00:00:10:00</div>
                     <div class="timer-input-group">
                         <input type="number" id="tDays" placeholder="Дни" value="0">
                         <input type="number" id="tHours" placeholder="Часы" value="0">
@@ -175,10 +462,10 @@
         const db = firebase.database();
 
         const PASS = 'rekrut_1_mmemnto_mori_001_index_0';
-        let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'new';
+        let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'class';
         let tSec = 600, tInt = null, onlineUsers = {};
 
-        // --- МОДАЛКИ (ВМЕСТО АЛЕРТОВ) ---
+        // --- ЭЛИТНЫЙ ИНТЕРФЕЙС (МОДАЛКИ) ---
         function showModal(title, text, confirmCallback) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalText').innerText = text;
@@ -186,17 +473,8 @@
             document.getElementById('modalOverlay').style.display = 'block';
             document.getElementById('modalConfirmBtn').onclick = () => { confirmCallback(); closeModal(); };
         }
-        function closeModal() {
-            document.getElementById('confirmModal').style.display = 'none';
-            document.getElementById('modalOverlay').style.display = 'none';
-        }
-
-        // --- ПОПАП (ОНЛАЙН / ВЕРДИКТ) ---
-        function openPopup(title, html) {
-            document.getElementById('popupTitle').innerText = title;
-            document.getElementById('popupContent').innerHTML = html;
-            document.getElementById('ui-popup').style.display = 'block';
-        }
+        function closeModal() { document.getElementById('confirmModal').style.display = 'none'; document.getElementById('modalOverlay').style.display = 'none'; }
+        function openPopup(title, html) { document.getElementById('popupTitle').innerText = title; document.getElementById('popupContent').innerHTML = html; document.getElementById('ui-popup').style.display = 'block'; }
         function closePopup() { document.getElementById('ui-popup').style.display = 'none'; }
 
         function setView(id, b) {
@@ -207,11 +485,11 @@
         }
 
         function toggleSide() {
-            const p = document.getElementById('sidePanel');
-            p.classList.toggle('collapsed');
+            const p = document.getElementById('sidePanel'); p.classList.toggle('collapsed');
             document.getElementById('sideIcon').className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
         }
 
+        // --- БАЗА ДАННЫХ ---
         db.ref('lots').on('value', s => { data = s.val() ? Object.entries(s.val()) : []; renderAll(); });
         db.ref('bans').on('value', s => {
             const list = document.getElementById('banList'), bans = s.val() || {};
@@ -220,24 +498,17 @@
                 list.innerHTML += `<div class="ban-item"><span><b>${name}</b> (ID: ${uid})</span><button class="unban-btn" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button></div>`;
             });
         });
-
-        db.ref('presence').on('value', s => {
-            onlineUsers = s.val() || {};
-            document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length;
-        });
-
+        db.ref('presence').on('value', s => { onlineUsers = s.val() || {}; document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length; });
         db.ref('auction/rules').once('value', s => { if(s.val()) document.getElementById('rulesArea').innerText = s.val(); });
 
         function showOnlineList() {
             const names = Object.values(onlineUsers).map(u => `<div class="popup-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
-            openPopup("СЕЙЧАС ОНЛАЙН", names || "Никого нет");
+            openPopup("СЕЙЧАС ОНЛАЙН", names || "Никого нет в сети");
         }
 
-        // --- ЛОГИКА БАНА ---
         function askBan(uid, name) {
-            showModal("БАН ПОЛЬЗОВАТЕЛЯ", `Вы точно хотите забанить ${name}? Он больше не сможет зайти на аукцион.`, () => {
-                db.ref('bans/' + uid).set(name);
-            });
+            if(uid === 'admin' || name === 'Admin') return openPopup("ОШИБКА", "<span style='color:var(--red)'>АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!</span>");
+            showModal("БАН ПОЛЬЗОВАТЕЛЯ", `Вы точно хотите забанить ${name}? Он больше не сможет зайти на аукцион.`, () => { db.ref('bans/' + uid).set(name); });
         }
 
         function showLotVoters(id, name, voters) {
@@ -245,17 +516,13 @@
             const html = Object.entries(voters).map(([uid, username]) => `
                 <div class="popup-row">
                     <span>${username}</span>
-                    <i class="fas fa-user-slash mini-ban-btn" title="Забанить" onclick="askBan('${uid}', '${username}')"></i>
-                </div>
-            `).join('');
+                    <i class="fas fa-user-slash mini-ban-btn" onclick="askBan('${uid}', '${username}')"></i>
+                </div>`).join('');
             openPopup("ГОЛОСОВАЛИ ЗА " + name, html);
         }
 
         let rulesTimer;
-        function saveRules() {
-            clearTimeout(rulesTimer);
-            rulesTimer = setTimeout(() => { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }, 500);
-        }
+        function saveRules() { clearTimeout(rulesTimer); rulesTimer = setTimeout(() => { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }, 500); }
 
         function renderAll() {
             const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
@@ -264,34 +531,34 @@
             const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
 
             data.forEach(([id, d], i) => {
-                const isOut = d.active === false;
-                const p = total > 0 ? (((d.votes||d.val||0)/total)*100).toFixed(1) : 0;
-                if(!(isOut && hide)) {
-                    wl.innerHTML += `<div class="lot-item ${isOut ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
+                const votes = d.votes || d.val || 0;
+                const p = total > 0 ? ((votes/total)*100).toFixed(1) : 0;
+                if(!(d.active === false && hide)) {
+                    wl.innerHTML += `<div class="lot-item ${d.active === false ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
                         ${showPct ? `<span style="color:var(--accent); font-size:10px; margin:0 10px;">${p}%</span>` : ''}
-                        <b>${d.votes||d.val||0}</b>
+                        <b>${votes}</b>
                     </div>`;
                 }
-                al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${isOut?'opacity:0.3':''}">
+                al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
                     <div style="display:flex; align-items:center;">
                         <span style="width:30px; color:#333;">${i+1}</span>
                         <span style="flex:1; font-weight:bold;">${d.name}</span>
                         <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
                         <span style="margin-right:15px; cursor:pointer;" onclick='showLotVoters("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
-                            ${d.votes||d.val||0} <i class="fas fa-users-between-lines" style="color:#555; font-size:12px;"></i>
+                            ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
                         </span>
-                        <i class="fas fa-user-times" title="Забанить автора" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBan('${d.uid || d.authorId}', '${d.author}')"></i>
+                        <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBan('${d.uid || d.authorId}', '${d.author}')"></i>
                         <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="safeDeleteLot('${id}')"></i>
                     </div>
-                    <div style="font-size:10px; color:#555; padding-left:30px;">Автор: ${d.author || 'Admin'}</div>
+                    <div style="font-size:10px; color:#555; padding-left:30px; margin-top:3px;">Автор: ${d.author || 'Admin'}</div>
                 </div>`;
             });
             drawWheel();
         }
 
         function safeDeleteLot(id) {
-            showModal("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Все проголосовавшие за него смогут проголосовать снова.", () => {
+            showModal("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса вернутся пользователям, и они смогут переголосовать.", () => {
                 db.ref('users').once('value', snap => {
                     snap.forEach(u => { if(u.val().votedFor === id) db.ref('users/' + u.key).update({ voted: false, votedFor: null }); });
                     db.ref('lots/' + id).remove();
@@ -299,30 +566,34 @@
             });
         }
 
-        // --- ТАЙМЕР С ФИКСОМ ДНЕЙ ---
+        // --- ТАЙМЕР НА 3+ ДНЯ ---
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
             const m = parseInt(document.getElementById('tMins').value) || 0;
-            tSec = (d * 86400) + (h * 3600) + (m * 60);
-            tUpdate();
+            tSec = (d * 86400) + (h * 3600) + (m * 60); tUpdate();
         }
         function tUpdate() { 
-            const d = Math.floor(tSec / 86400);
-            const h = Math.floor((tSec % 86400) / 3600);
-            const m = Math.floor((tSec % 3600) / 60);
-            const s = tSec % 60;
+            const d = Math.floor(tSec / 86400), h = Math.floor((tSec % 86400) / 3600), m = Math.floor((tSec % 3600) / 60), s = tSec % 60;
             document.getElementById('tDisp').innerText = `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
             db.ref('auction').update({ timer: tSec, pass: PASS });
             db.ref('auction/votingClosed').set(tSec <= 0 && document.getElementById('lockVoting').checked);
         }
-
         function tToggle() { 
             const b=document.getElementById('tPlay'); if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
             else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();} else { clearInterval(tInt); tInt=null; b.className="fas fa-play"; }},1000); b.className="fas fa-pause";} 
         }
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
+
+        // --- ЛОГИКА КОЛЕСА ---
+        function setWType(t) { 
+            wType = t; 
+            document.getElementById('tNew').classList.toggle('active', t==='new');
+            document.getElementById('tClass').classList.toggle('active', t==='class');
+            drawWheel(); 
+        }
+        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
 
         function drawWheel() {
             const cvs = document.getElementById('wheelCanvas'), ctx = cvs.getContext('2d');
@@ -332,7 +603,9 @@
             const total = active.reduce((a,[id,d]) => a + (d.votes || d.val || 0), 0);
             let curr = rotation;
             active.forEach(([id, d], i) => {
-                const slice = ((d.votes||d.val||0)/total) * (Math.PI*2);
+                const votes = d.votes || d.val || 0;
+                // КЛАССИКА = ПО ВЕСУ (КАК ДОНАТ), НОВОЕ = ВСЕМ ПОРОВНУ
+                const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
                 ctx.fillStyle = `hsl(${d.hue},65%,45%)`; ctx.fill();
@@ -345,7 +618,7 @@
         function startSpin() {
             const active = data.filter(([id,d]) => d.active !== false);
             if(isSpinning || active.length < 2) return;
-            isSpinning = true;
+            isSpinning = true; document.getElementById('simpleStatus').innerText = '';
             const dur = parseInt(document.getElementById('spinTime').value)*1000, start = performance.now(), pwr = 35 + Math.random()*40, sRot = rotation;
             function anim(now) {
                 const p = Math.min((now-start)/dur, 1), ease = 1 - Math.pow(1-p, 4);
@@ -361,15 +634,15 @@
             const norm = ((rotation % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2), target = (Math.PI*1.5 - norm + (Math.PI*2)) % (Math.PI*2);
             let cur = 0;
             for(const [id, d] of active) {
-                const slice = ((d.votes||d.val||0)/total) * (Math.PI*2);
+                const votes = d.votes || d.val || 0;
+                const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 if(target >= cur && target < cur + slice) return {id, name: d.name};
                 cur += slice;
             }
         }
 
         function updateStatus(name, isFinal) {
-            const st = document.getElementById('simpleStatus');
-            st.style.color = isFinal ? "var(--accent)" : "var(--red)";
+            const st = document.getElementById('simpleStatus'); st.style.color = isFinal ? "var(--accent)" : "var(--red)";
             st.innerText = isFinal ? "🏆 ПОБЕДИТЕЛЬ: " + name : "❌ ВЫБЫЛ: " + name;
             setTimeout(() => { st.innerText = ''; }, 4000);
         }
@@ -380,16 +653,8 @@
             document.getElementById('aName').value = '';
         }
 
-        function askClearDB() {
-            showModal("СБРОС БАЗЫ", "Вы уверены, что хотите полностью очистить все лоты и правила? Это действие необратимо.", () => {
-                db.ref('lots').remove();
-                db.ref('auction').update({ timer: 600, pass: PASS, rules: "" });
-            });
-        }
-
+        function askClearDB() { showModal("СБРОС БАЗЫ", "Вы уверены? Это полностью удалит все лоты и правила. Действие нельзя отменить.", () => { db.ref('lots').remove(); db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); }); }
         function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
-        function togglePct() { showPct = !showPct; document.getElementById('pBtn').classList.toggle('active'); renderAll(); }
-        function setWType(t) { wType = t; drawWheel(); }
         function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
 
         tUpdate();
