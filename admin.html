@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Stream Auction - Final Pro Edition</title>
+    <title>Stream Auction - God Mode Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* ОСНОВНЫЕ ПЕРЕМЕННЫЕ */
+        /* ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ */
         :root { 
             --bg: #0a0a0a; 
             --panel: #111; 
@@ -20,7 +20,7 @@
             margin: 0; 
             background: var(--bg); 
             color: #efefef; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
@@ -28,7 +28,7 @@
             background-position: center; 
         }
 
-        /* САЙДБАР ЛЕВО */
+        /* САЙДБАР (ЛЕВО) */
         .sidebar { 
             width: var(--sidebar-w); 
             background: #000; 
@@ -60,7 +60,7 @@
             background: rgba(0, 162, 255, 0.1); 
         }
 
-        /* КОНТЕНТ ПРИЛОЖЕНИЯ */
+        /* ОСНОВНОЙ КОНТЕНТ */
         .app-content { 
             flex-grow: 1; 
             display: flex; 
@@ -78,7 +78,7 @@
             display: flex; 
         }
 
-        /* ПАНЕЛЬ ЛОТОВ (КОЛЕСО) */
+        /* СПИСОК ЛОТОВ (КОЛЕСО) */
         .lots-panel { 
             width: 320px; 
             background: rgba(10,10,10,0.95); 
@@ -130,7 +130,7 @@
             filter: grayscale(1); 
         }
 
-        /* КОЛЕСО ЦЕНТР */
+        /* КОЛЕСО */
         .wheel-zone { 
             flex: 1; 
             display: flex; 
@@ -182,7 +182,7 @@
             object-fit: cover; 
         }
 
-        /* УПРАВЛЕНИЕ ПРАВО */
+        /* КОНТРОЛЬ ПРАВО */
         .control-panel { 
             width: 280px; 
             background: rgba(14,14,14,0.9); 
@@ -204,7 +204,7 @@
             font-size: 16px; 
         }
 
-        /* АУКЦИОН КОНТЕЙНЕРЫ */
+        /* АУКЦИОН СЕТКА */
         .auc-container { 
             display: grid; 
             grid-template-columns: 300px 1fr 340px; 
@@ -245,8 +245,93 @@
             border-radius: 4px; 
         }
 
-        /* КАСТОМНЫЕ ОКНА (ВМЕСТО АЛЕРТОВ) */
-        .modal-overlay { 
+        /* --------------------------------------------------- */
+        /* ИНТЕРФЕЙСНЫЕ ОКНА (СТЕК СПРАВА) */
+        /* --------------------------------------------------- */
+
+        /* 1. КРАСНАЯ ЗОНА: ОШИБКИ / ВАРНИНГИ (ВЕРХ) */
+        #error-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 20px; 
+            right: 25px; 
+            width: 300px; 
+            background: #111; 
+            border: 1px solid var(--red); 
+            border-radius: 12px; 
+            padding: 15px; 
+            z-index: 2500; 
+            box-shadow: 0 10px 40px #000; 
+        }
+
+        /* 2. ИНФО-ЗОНА: КТО ГОЛОСОВАЛ (СЕРЕДИНА) */
+        #voters-overlay { 
+            display: none; 
+            position: fixed; 
+            bottom: 220px; /* Между онлайном и верхом */
+            right: 25px; 
+            width: 300px; 
+            max-height: 350px; 
+            background: #111; 
+            border: 1px solid var(--accent); 
+            border-radius: 12px; 
+            padding: 15px; 
+            z-index: 2400; 
+            box-shadow: 0 10px 40px #000; 
+            overflow-y: auto; 
+        }
+
+        /* 3. СИНЯЯ ЗОНА: ОНЛАЙН (НИЗ) */
+        #online-overlay { 
+            display: none; 
+            position: fixed; 
+            bottom: 80px; 
+            right: 25px; 
+            width: 300px; 
+            background: #111; 
+            border: 1px solid var(--accent); 
+            border-radius: 12px; 
+            padding: 15px; 
+            z-index: 2300; 
+            box-shadow: 0 10px 40px #000; 
+        }
+
+        /* ОБЩИЕ СТИЛИ СТРОК */
+        .ui-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #222; 
+            font-size: 14px; 
+        }
+
+        .ban-ico-btn { 
+            color: var(--red); 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: 0.2s; 
+        }
+        .ban-ico-btn:hover { transform: scale(1.2); }
+
+        /* ИКОНКА АВАТАРКИ В ЛОТЕ */
+        .vote-avatar-box { 
+            background: #fff; 
+            color: #000; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 10px; 
+            margin-left: 8px; 
+            vertical-align: middle; 
+            font-weight: bold;
+        }
+
+        /* ЦЕНТРАЛЬНАЯ МОДАЛКА (ДА/НЕТ) */
+        .modal-blur { 
             display: none; 
             position: fixed; 
             top: 0; 
@@ -254,131 +339,86 @@
             width: 100%; 
             height: 100%; 
             background: rgba(0,0,0,0.85); 
-            z-index: 2000; 
+            z-index: 3000; 
         }
 
-        .custom-modal { 
+        .confirm-modal { 
             display: none; 
             position: fixed; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            width: 340px; 
+            width: 360px; 
             background: #111; 
             border: 1px solid var(--accent); 
             border-radius: 15px; 
             padding: 25px; 
-            z-index: 2100; 
-            box-shadow: 0 0 50px rgba(0,0,0,1); 
+            z-index: 3100; 
+            box-shadow: 0 0 60px #000; 
         }
 
-        .modal-btn-row { 
+        .modal-btns { 
             display: flex; 
             justify-content: flex-end; 
-            margin-top: 20px; 
-            gap: 10px; 
+            margin-top: 25px; 
+            gap: 12px; 
         }
 
         .m-btn { 
-            padding: 10px 20px; 
+            padding: 12px 24px; 
             border-radius: 6px; 
             border: none; 
             cursor: pointer; 
-            font-weight: bold; 
+            font-weight: 900; 
             text-transform: uppercase; 
+            font-size: 12px;
         }
 
-        .m-confirm { background: var(--red); color: #fff; }
-        .m-cancel { background: #222; color: #777; }
+        .m-yes { background: var(--red); color: #fff; }
+        .m-no { background: #222; color: #888; }
 
-        /* ИНТЕРФЕЙСНЫЕ ПОПАПЫ (ОНЛАЙН, ГОЛОСА, ОШИБКИ) */
-        #popup-window { 
-            display: none; 
-            position: fixed; 
-            bottom: 160px; /* Красная зона - поднял выше онлайна */
-            right: 25px; 
-            width: 280px; 
-            max-height: 380px; 
-            background: #111; 
-            border: 1px solid var(--accent); 
-            border-radius: 12px; 
-            padding: 15px; 
-            z-index: 1000; 
-            box-shadow: 0 0 30px #000; 
-            overflow-y: auto; 
-        }
-
-        #error-popup { 
-            display: none; 
-            position: fixed; 
-            bottom: 300px; /* Желтая зона - еще выше */
-            right: 25px; 
-            width: 280px; 
-            background: #111; 
-            border: 1px solid var(--red); 
-            border-radius: 10px; 
-            padding: 15px; 
-            z-index: 1001; 
-            box-shadow: 0 0 30px #000; 
-        }
-
-        .pop-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 8px 0; 
-            border-bottom: 1px solid #222; 
-            font-size: 13px; 
-        }
-
-        /* ИКОНКА АВАТАРКИ */
-        .user-avatar-small { 
-            background: #fff; 
-            color: #000; 
-            border-radius: 50%; 
-            width: 18px; 
-            height: 18px; 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 10px; 
-            margin-left: 6px; 
-            vertical-align: middle; 
-        }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body id="mainBody">
 
-    <!-- МОДАЛКА (ЦЕНТР) -->
-    <div id="modalOverlay" class="modal-overlay"></div>
-    <div id="confirmModal" class="custom-modal">
-        <h3 id="modalTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">СИСТЕМА</h3>
-        <p id="modalText" style="color:#aaa; line-height:1.4;"></p>
-        <div class="modal-btn-row">
-            <button class="m-btn m-cancel" onclick="closeModal()">ОТМЕНА</button>
-            <button id="modalConfirmBtn" class="m-btn m-confirm">ДА</button>
+    <!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ -->
+    <div id="modalOverlay" class="modal-blur"></div>
+    <div id="confirmModal" class="confirm-modal">
+        <h3 id="mTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">СИСТЕМНЫЙ ЗАПРОС</h3>
+        <p id="mText" style="color:#bbb; line-height:1.5; font-size:15px;"></p>
+        <div class="modal-btns">
+            <button class="m-btn m-no" onclick="closeConfirm()">ОТМЕНА</button>
+            <button id="mConfirmBtn" class="m-btn m-yes">ПОДТВЕРДИТЬ</button>
         </div>
     </div>
 
-    <!-- ПОПАП ОШИБКИ (ВЕРХ) -->
-    <div id="error-popup">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span style="color:var(--red); font-weight:bold; font-size:11px;">ОШИБКА</span>
+    <!-- 1. ВЕРХ: ОШИБКИ -->
+    <div id="error-overlay">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="color:var(--red); font-weight:bold; font-size:11px;">КРИТИЧЕСКАЯ ОШИБКА</span>
             <i class="fas fa-times" onclick="closeError()" style="cursor:pointer; color:#444;"></i>
         </div>
-        <div id="errorText" style="color:#fff; font-size:14px; font-weight:bold;"></div>
+        <div id="errorDisplay" style="color:#fff; font-size:14px; font-weight:bold;"></div>
     </div>
 
-    <!-- ПОПАП ИНФО (СЕРЕДИНА) -->
-    <div id="popup-window">
+    <!-- 2. СЕРЕДИНА: КТО ГОЛОСОВАЛ -->
+    <div id="voters-overlay">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
-            <span id="popupTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ДАННЫЕ</span>
-            <i class="fas fa-times" onclick="closePopup()" style="cursor:pointer; color:#444;"></i>
+            <span id="vTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ДЕТАЛИ ГОЛОСОВАНИЯ</span>
+            <i class="fas fa-times" onclick="closeVoters()" style="cursor:pointer; color:#555;"></i>
         </div>
-        <div id="popupContent"></div>
+        <div id="vListContent"></div>
+    </div>
+
+    <!-- 3. НИЗ: ОНЛАЙН -->
+    <div id="online-overlay">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--accent);">СЕЙЧАС В СЕТИ</span>
+            <i class="fas fa-times" onclick="closeOnline()" style="cursor:pointer; color:#444;"></i>
+        </div>
+        <div id="onlineNamesBox" style="font-size:13px; color:#ccc; line-height:1.6; max-height:180px; overflow-y:auto;"></div>
     </div>
 
     <aside class="sidebar">
@@ -389,6 +429,7 @@
     </aside>
 
     <main class="app-content">
+        <!-- СЕКЦИЯ: КОЛЕСО -->
         <section id="view-wheel" class="view-section active">
             <div class="lots-panel" id="sidePanel">
                 <div class="toggle-trigger" onclick="toggleSide()"><i class="fas fa-chevron-left" id="sideIcon"></i></div>
@@ -425,6 +466,7 @@
             </div>
         </section>
 
+        <!-- СЕКЦИЯ: АУКЦИОН -->
         <section id="view-auc" class="view-section" style="flex-direction:column;">
             <div class="auc-container">
                 <div style="background:#111; border-radius:12px; padding:20px; border:1px solid #222;">
@@ -434,15 +476,15 @@
 
                 <div style="background:#111; border-radius:12px; border:1px solid #222; display:flex; flex-direction:column;">
                     <div style="padding:15px; display:flex; gap:10px; border-bottom:1px solid #222;">
-                        <input type="text" id="aName" placeholder="Лот..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
+                        <input type="text" id="aName" placeholder="Название лота..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:8px;">
                         <input type="number" id="aVal" value="1" style="width:70px; background:#000; border:1px solid #333; color:#fff; padding:8px;">
-                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px;">+</button>
+                        <button onclick="addLot()" style="background:var(--accent); border:none; color:#fff; padding:0 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-plus"></i></button>
                     </div>
                     <div id="aucList" style="flex:1; overflow-y:auto;"></div>
                 </div>
 
                 <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace;">00:00:10:00</div>
+                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace; letter-spacing: 2px;">00:00:10:00</div>
                     <div class="timer-input-group">
                         <input type="number" id="tDays" placeholder="Дни" value="0">
                         <input type="number" id="tHours" placeholder="Часы" value="0">
@@ -453,8 +495,8 @@
                     <div style="display:flex; justify-content:center; gap:20px; font-size:24px; color:#444;">
                         <i id="tPlay" class="fas fa-play" onclick="tToggle()" style="cursor:pointer;"></i>
                         <i class="fas fa-undo" onclick="tReset()" style="cursor:pointer;"></i>
-                        <i class="fas fa-caret-up" onclick="tMod(60)" style="cursor:pointer;"></i>
-                        <i class="fas fa-caret-down" onclick="tMod(-60)" style="cursor:pointer;"></i>
+                        <i class="fas fa-plus-circle" onclick="tMod(60)" style="cursor:pointer;"></i>
+                        <i class="fas fa-minus-circle" onclick="tMod(-60)" style="cursor:pointer;"></i>
                     </div>
                 </div>
             </div>
@@ -470,6 +512,7 @@
             </div>
         </section>
 
+        <!-- ЧЕРНЫЙ СПИСОК -->
         <section id="view-vip" class="view-section" style="flex-direction:column; padding:40px;">
             <h2 style="color:var(--red);"><i class="fas fa-user-slash"></i> ЧЕРНЫЙ СПИСОК</h2>
             <div id="banList" style="max-width: 600px; overflow-y: auto;"></div>
@@ -480,6 +523,7 @@
     </main>
 
     <script>
+        // FIREBASE КОНФИГ
         const firebaseConfig = { apiKey: "AIzaSyDhSe5und284GF-eeqGP8l3dOUuazxYwZc", databaseURL: "https://dddd-68b66-default-rtdb.europe-west1.firebasedatabase.app" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -488,41 +532,48 @@
         let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'class';
         let tSec = 600, tInt = null, onlineUsers = {};
 
-        // --- ФУНКЦИИ ИНТЕРФЕЙСА ---
-        function showModal(title, text, confirmCallback) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalText').innerText = text;
+        // --- ФУНКЦИИ ИНТЕРФЕЙСА (СТЕК ОКОН) ---
+        function askConfirm(title, text, confirmCallback) {
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mText').innerText = text;
             document.getElementById('confirmModal').style.display = 'block';
             document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('modalConfirmBtn').onclick = () => { confirmCallback(); closeModal(); };
+            document.getElementById('mConfirmBtn').onclick = () => { confirmCallback(); closeConfirm(); };
         }
-        function closeModal() { document.getElementById('confirmModal').style.display = 'none'; document.getElementById('modalOverlay').style.display = 'none'; }
+        function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; document.getElementById('modalOverlay').style.display = 'none'; }
         
-        function openPopup(title, html) { 
-            document.getElementById('popupTitle').innerText = title; 
-            document.getElementById('popupContent').innerHTML = html; 
-            document.getElementById('popup-window').style.display = 'block'; 
+        function showOnlineList() {
+            const el = document.getElementById('online-overlay');
+            if(el.style.display === 'block') return closeOnline();
+            const names = Object.values(onlineUsers).map(u => `<div class="ui-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
+            document.getElementById('onlineNamesBox').innerHTML = names || "В сети никого нет";
+            el.style.display = 'block';
         }
-        function closePopup() { document.getElementById('popup-window').style.display = 'none'; }
+        function closeOnline() { document.getElementById('online-overlay').style.display = 'none'; }
 
         function showError(text) {
-            document.getElementById('errorText').innerText = text;
-            document.getElementById('error-popup').style.display = 'block';
-            setTimeout(closeError, 4000);
+            document.getElementById('errorDisplay').innerText = text;
+            document.getElementById('error-overlay').style.display = 'block';
+            setTimeout(closeError, 5000);
         }
-        function closeError() { document.getElementById('error-popup').style.display = 'none'; }
+        function closeError() { document.getElementById('error-overlay').style.display = 'none'; }
 
-        function setView(id, b) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active'); 
-            b.classList.add('active');
+        function showLotDetails(id, name, voters) {
+            if(!voters) {
+                document.getElementById('vTitle').innerText = "ИНФО: " + name;
+                document.getElementById('vListContent').innerHTML = "<div class='ui-row'>Пока голосов нет</div>";
+            } else {
+                document.getElementById('vTitle').innerText = "ГОЛОСОВАЛИ ЗА: " + name;
+                const html = Object.entries(voters).map(([uid, username]) => `
+                    <div class="ui-row">
+                        <span>${username}</span>
+                        <i class="fas fa-user-slash mini-ban-btn" onclick="askBanUser('${uid}', '${username}')"></i>
+                    </div>`).join('');
+                document.getElementById('vListContent').innerHTML = html;
+            }
+            document.getElementById('voters-overlay').style.display = 'block';
         }
-
-        function toggleSide() {
-            const p = document.getElementById('sidePanel'); p.classList.toggle('collapsed');
-            document.getElementById('sideIcon').className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
-        }
+        function closeVoters() { document.getElementById('voters-overlay').style.display = 'none'; }
 
         // --- ЛОГИКА БАЗЫ ---
         db.ref('lots').on('value', s => { data = s.val() ? Object.entries(s.val()) : []; renderAll(); });
@@ -530,42 +581,29 @@
             const list = document.getElementById('banList'), bans = s.val() || {};
             list.innerHTML = '';
             Object.entries(bans).forEach(([uid, name]) => {
-                list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#161616; padding:12px; margin-bottom:6px; border-radius:8px; border-left:3px solid var(--red);">
+                list.innerHTML += `<div class="ui-row" style="background:#161616; padding:12px; margin-bottom:6px; border-radius:8px;">
                     <span><b>${name}</b> (ID: ${uid})</span>
-                    <button style="background:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:11px;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
+                    <button style="background:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
                 </div>`;
             });
         });
         db.ref('presence').on('value', s => { onlineUsers = s.val() || {}; document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length; });
         db.ref('auction/rules').once('value', s => { if(s.val()) document.getElementById('rulesArea').innerText = s.val(); });
 
-        function showOnlineList() {
-            const names = Object.values(onlineUsers).map(u => `<div class="pop-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
-            openPopup("СЕЙЧАС ОНЛАЙН", names || "Никого нет в сети");
-        }
-
-        // БАН С ПРОВЕРКОЙ АДМИНА
-        function askBan(uid, name) {
+        function askBanUser(uid, name) {
             if(uid === 'admin' || name === 'Admin' || uid === 'undefined') {
                 return showError("АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!");
             }
-            showModal("БАН ПОЛЬЗОВАТЕЛЯ", `Вы точно хотите забанить ${name}? Это заблокирует его навсегда.`, () => {
+            askConfirm("БАН ПОЛЬЗОВАТЕЛЯ", `Забанить ${name}? Нарушитель больше не сможет зайти на сайт.`, () => {
                 db.ref('bans/' + uid).set(name);
             });
         }
 
-        function showLotVoters(id, name, voters) {
-            if(!voters) return openPopup("ГОЛОСОВАЛИ ЗА " + name, "Пока никто не голосовал");
-            const html = Object.entries(voters).map(([uid, username]) => `
-                <div class="pop-row">
-                    <span>${username}</span>
-                    <i class="fas fa-user-slash mini-ban-btn" onclick="askBan('${uid}', '${username}')"></i>
-                </div>`).join('');
-            openPopup("ГОЛОСОВАЛИ ЗА " + name, html);
-        }
-
         let rulesTimer;
-        function saveRules() { clearTimeout(rulesTimer); rulesTimer = setTimeout(() => { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }, 500); }
+        function saveRules() { 
+            clearTimeout(rulesTimer); 
+            rulesTimer = setTimeout(() => { db.ref('auction/rules').set(document.getElementById('rulesArea').innerText); }, 500); 
+        }
 
         function renderAll() {
             const wl = document.getElementById('wheelList'), al = document.getElementById('aucList'), hide = document.getElementById('hideOut').checked;
@@ -576,6 +614,7 @@
             data.forEach(([id, d], i) => {
                 const votes = d.votes || d.val || 0;
                 const p = total > 0 ? ((votes/total)*100).toFixed(1) : 0;
+                
                 if(!(d.active === false && hide)) {
                     wl.innerHTML += `<div class="lot-item ${d.active === false ? 'out' : ''}" style="border-left-color:hsl(${d.hue},70%,50%)">
                         <span style="flex:1; overflow:hidden;">${d.name}</span>
@@ -583,15 +622,16 @@
                         <b>${votes}</b>
                     </div>`;
                 }
+
                 al.innerHTML += `<div style="display:flex; flex-direction:column; padding:12px; border-bottom:1px solid #1a1a1a; ${d.active === false ?'opacity:0.3':''}">
                     <div style="display:flex; align-items:center;">
                         <span style="width:30px; color:#333;">${i+1}</span>
                         <span style="flex:1; font-weight:bold;">${d.name}</span>
                         <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
-                        <span style="margin-right:15px; cursor:pointer;" onclick='showLotVoters("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
-                            ${votes} <div class="user-avatar-small"><i class="fas fa-user"></i></div>
+                        <span style="margin-right:15px; cursor:pointer;" onclick='showLotDetails("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
+                            ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
                         </span>
-                        <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBan('${d.uid || d.authorId}', '${d.author}')"></i>
+                        <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBanUser('${d.uid || d.authorId}', '${d.author}')"></i>
                         <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="safeDeleteLot('${id}')"></i>
                     </div>
                     <div style="font-size:10px; color:#555; padding-left:30px; margin-top:3px;">Автор: ${d.author || 'Admin'}</div>
@@ -601,7 +641,7 @@
         }
 
         function safeDeleteLot(id) {
-            showModal("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса вернутся пользователям.", () => {
+            askConfirm("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Все проголосовавшие за него смогут проголосовать снова.", () => {
                 db.ref('users').once('value', snap => {
                     snap.forEach(u => { if(u.val().votedFor === id) db.ref('users/' + u.key).update({ voted: false, votedFor: null }); });
                     db.ref('lots/' + id).remove();
@@ -609,7 +649,7 @@
             });
         }
 
-        // --- ТАЙМЕР (ИСПРАВЛЕН ДЛЯ 3+ ДНЕЙ) ---
+        // --- ТАЙМЕР (ПОДДЕРЖКА ДНЕЙ) ---
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
@@ -652,7 +692,7 @@
             let curr = rotation;
             active.forEach(([id, d], i) => {
                 const votes = d.votes || d.val || 0;
-                // КЛАССИКА: РАЗМЕР ЗАВИСИТ ОТ ЛЮДЕЙ, НОВОЕ: ПОРОВНУ
+                // КЛАССИКА = ШАНС ПО КОЛИЧЕСТВУ ЛЮДЕЙ, НОВОЕ = ВСЕМ ПОРОВНУ (РАНДОМ)
                 const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
@@ -702,12 +742,24 @@
         }
 
         function askClearDB() { 
-            showModal("СБРОС БАЗЫ", "ВНИМАНИЕ! Это действие полностью удалит все лоты и обнулит правила. Вы уверены?", () => { 
+            askConfirm("СБРОС БАЗЫ", "ВНИМАНИЕ! Вы собираетесь очистить все лоты и обнулить правила. Это действие нельзя отменить. Вы уверены?", () => { 
                 db.ref('lots').remove(); 
                 db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); 
             }); 
         }
-        
+
+        function setView(id, b) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
+            document.getElementById('view-'+id).classList.add('active'); 
+            b.classList.add('active');
+        }
+
+        function toggleSide() {
+            const p = document.getElementById('sidePanel'); p.classList.toggle('collapsed');
+            document.getElementById('sideIcon').className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
+        }
+
         function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
         function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
 
