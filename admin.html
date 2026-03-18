@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* ОСНОВНЫЕ ПЕРЕМЕННЫЕ */
         :root { 
             --bg: #0a0a0a; 
             --panel: #111; 
@@ -19,7 +20,7 @@
             margin: 0; 
             background: var(--bg); 
             color: #efefef; 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
@@ -27,7 +28,7 @@
             background-position: center; 
         }
 
-        /* САЙДБАР */
+        /* САЙДБАР ЛЕВО */
         .sidebar { 
             width: var(--sidebar-w); 
             background: #000; 
@@ -59,6 +60,7 @@
             background: rgba(0, 162, 255, 0.1); 
         }
 
+        /* КОНТЕНТ ПРИЛОЖЕНИЯ */
         .app-content { 
             flex-grow: 1; 
             display: flex; 
@@ -76,7 +78,7 @@
             display: flex; 
         }
 
-        /* ЛЕВАЯ ПАНЕЛЬ ЛОТОВ */
+        /* ПАНЕЛЬ ЛОТОВ (КОЛЕСО) */
         .lots-panel { 
             width: 320px; 
             background: rgba(10,10,10,0.95); 
@@ -128,7 +130,7 @@
             filter: grayscale(1); 
         }
 
-        /* ЗОНА КОЛЕСА */
+        /* КОЛЕСО ЦЕНТР */
         .wheel-zone { 
             flex: 1; 
             display: flex; 
@@ -180,7 +182,7 @@
             object-fit: cover; 
         }
 
-        /* УПРАВЛЕНИЕ */
+        /* УПРАВЛЕНИЕ ПРАВО */
         .control-panel { 
             width: 280px; 
             background: rgba(14,14,14,0.9); 
@@ -202,7 +204,7 @@
             font-size: 16px; 
         }
 
-        /* АУКЦИОН */
+        /* АУКЦИОН КОНТЕЙНЕРЫ */
         .auc-container { 
             display: grid; 
             grid-template-columns: 300px 1fr 340px; 
@@ -242,23 +244,8 @@
             text-align: center; 
             border-radius: 4px; 
         }
-        
-        /* ЭЛИТНЫЕ МОДАЛКИ (ВМЕСТО АЛЕРТОВ) */
-        .custom-modal { 
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            width: 350px; 
-            background: #111; 
-            border: 1px solid var(--accent); 
-            border-radius: 12px; 
-            padding: 25px; 
-            z-index: 2000; 
-            box-shadow: 0 0 50px #000; 
-        }
 
+        /* КАСТОМНЫЕ ОКНА (ВМЕСТО АЛЕРТОВ) */
         .modal-overlay { 
             display: none; 
             position: fixed; 
@@ -267,93 +254,129 @@
             width: 100%; 
             height: 100%; 
             background: rgba(0,0,0,0.85); 
-            z-index: 1999; 
+            z-index: 2000; 
         }
 
-        .modal-btn { 
-            padding: 12px 25px; 
+        .custom-modal { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 340px; 
+            background: #111; 
+            border: 1px solid var(--accent); 
+            border-radius: 15px; 
+            padding: 25px; 
+            z-index: 2100; 
+            box-shadow: 0 0 50px rgba(0,0,0,1); 
+        }
+
+        .modal-btn-row { 
+            display: flex; 
+            justify-content: flex-end; 
+            margin-top: 20px; 
+            gap: 10px; 
+        }
+
+        .m-btn { 
+            padding: 10px 20px; 
             border-radius: 6px; 
             border: none; 
             cursor: pointer; 
             font-weight: bold; 
-            margin-top: 20px; 
             text-transform: uppercase; 
         }
 
-        .btn-confirm { background: var(--red); color: #fff; }
-        .btn-cancel { background: #222; color: #888; margin-right: 10px; }
+        .m-confirm { background: var(--red); color: #fff; }
+        .m-cancel { background: #222; color: #777; }
 
-        /* ОКНО ОНЛАЙНА / КТО ГОЛОСОВАЛ */
-        #ui-popup { 
+        /* ИНТЕРФЕЙСНЫЕ ПОПАПЫ (ОНЛАЙН, ГОЛОСА, ОШИБКИ) */
+        #popup-window { 
             display: none; 
             position: fixed; 
-            bottom: 90px; 
+            bottom: 160px; /* Красная зона - поднял выше онлайна */
             right: 25px; 
-            width: 300px; 
-            max-height: 400px; 
+            width: 280px; 
+            max-height: 380px; 
             background: #111; 
             border: 1px solid var(--accent); 
-            border-radius: 10px; 
+            border-radius: 12px; 
             padding: 15px; 
             z-index: 1000; 
             box-shadow: 0 0 30px #000; 
             overflow-y: auto; 
         }
 
-        .popup-row { 
+        #error-popup { 
+            display: none; 
+            position: fixed; 
+            bottom: 300px; /* Желтая зона - еще выше */
+            right: 25px; 
+            width: 280px; 
+            background: #111; 
+            border: 1px solid var(--red); 
+            border-radius: 10px; 
+            padding: 15px; 
+            z-index: 1001; 
+            box-shadow: 0 0 30px #000; 
+        }
+
+        .pop-row { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 10px 0; 
+            padding: 8px 0; 
             border-bottom: 1px solid #222; 
-            font-size: 14px; 
+            font-size: 13px; 
         }
 
-        .mini-ban-btn { 
-            color: var(--red); 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: 0.2s;
-        }
-
-        .mini-ban-btn:hover { transform: scale(1.2); }
-
-        /* Иконка челика из Твоего скрина */
-        .vote-avatar-box { 
+        /* ИКОНКА АВАТАРКИ */
+        .user-avatar-small { 
             background: #fff; 
             color: #000; 
             border-radius: 50%; 
-            width: 20px; 
-            height: 20px; 
+            width: 18px; 
+            height: 18px; 
             display: inline-flex; 
             align-items: center; 
             justify-content: center; 
             font-size: 10px; 
-            margin-left: 8px; 
-            vertical-align: middle;
+            margin-left: 6px; 
+            vertical-align: middle; 
         }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body id="mainBody">
 
-    <!-- ФОН МОДАЛОК -->
+    <!-- МОДАЛКА (ЦЕНТР) -->
     <div id="modalOverlay" class="modal-overlay"></div>
-
-    <!-- МОДАЛКА ДЛЯ БАНА И УДАЛЕНИЯ -->
     <div id="confirmModal" class="custom-modal">
-        <h3 id="modalTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">ВНИМАНИЕ</h3>
-        <p id="modalText" style="line-height:1.5; color:#ccc;"></p>
-        <div style="display:flex; justify-content: flex-end;">
-            <button class="modal-btn btn-cancel" onclick="closeModal()">ОТМЕНА</button>
-            <button id="modalConfirmBtn" class="modal-btn btn-confirm">ДА</button>
+        <h3 id="modalTitle" style="margin-top:0; color:var(--accent); letter-spacing:1px;">СИСТЕМА</h3>
+        <p id="modalText" style="color:#aaa; line-height:1.4;"></p>
+        <div class="modal-btn-row">
+            <button class="m-btn m-cancel" onclick="closeModal()">ОТМЕНА</button>
+            <button id="modalConfirmBtn" class="m-btn m-confirm">ДА</button>
         </div>
     </div>
 
-    <!-- ПОПАП ДЛЯ ОНЛАЙНА И СПИСКА ЮЗЕРОВ -->
-    <div id="ui-popup">
+    <!-- ПОПАП ОШИБКИ (ВЕРХ) -->
+    <div id="error-popup">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span style="color:var(--red); font-weight:bold; font-size:11px;">ОШИБКА</span>
+            <i class="fas fa-times" onclick="closeError()" style="cursor:pointer; color:#444;"></i>
+        </div>
+        <div id="errorText" style="color:#fff; font-size:14px; font-weight:bold;"></div>
+    </div>
+
+    <!-- ПОПАП ИНФО (СЕРЕДИНА) -->
+    <div id="popup-window">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
-            <span id="popupTitle" style="font-size:12px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ИНФОРМАЦИЯ</span>
-            <i class="fas fa-times" onclick="closePopup()" style="cursor:pointer; color:#555;"></i>
+            <span id="popupTitle" style="font-size:11px; font-weight:bold; color:var(--accent); text-transform:uppercase;">ДАННЫЕ</span>
+            <i class="fas fa-times" onclick="closePopup()" style="cursor:pointer; color:#444;"></i>
         </div>
         <div id="popupContent"></div>
     </div>
@@ -419,7 +442,7 @@
                 </div>
 
                 <div style="background:#1a1a1a; border-radius:12px; padding:25px; text-align:center; height:fit-content; border:1px solid #222;">
-                    <div id="tDisp" style="font-size:38px; font-weight:bold; margin-bottom:15px; font-family: monospace; letter-spacing: 2px;">00:00:10:00</div>
+                    <div id="tDisp" style="font-size:32px; font-weight:bold; margin-bottom:15px; font-family: monospace;">00:00:10:00</div>
                     <div class="timer-input-group">
                         <input type="number" id="tDays" placeholder="Дни" value="0">
                         <input type="number" id="tHours" placeholder="Часы" value="0">
@@ -465,7 +488,7 @@
         let data = [], isSpinning = false, rotation = 0, showPct = true, wType = 'class';
         let tSec = 600, tInt = null, onlineUsers = {};
 
-        // --- ЭЛИТНЫЙ ИНТЕРФЕЙС (МОДАЛКИ) ---
+        // --- ФУНКЦИИ ИНТЕРФЕЙСА ---
         function showModal(title, text, confirmCallback) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalText').innerText = text;
@@ -474,8 +497,20 @@
             document.getElementById('modalConfirmBtn').onclick = () => { confirmCallback(); closeModal(); };
         }
         function closeModal() { document.getElementById('confirmModal').style.display = 'none'; document.getElementById('modalOverlay').style.display = 'none'; }
-        function openPopup(title, html) { document.getElementById('popupTitle').innerText = title; document.getElementById('popupContent').innerHTML = html; document.getElementById('ui-popup').style.display = 'block'; }
-        function closePopup() { document.getElementById('ui-popup').style.display = 'none'; }
+        
+        function openPopup(title, html) { 
+            document.getElementById('popupTitle').innerText = title; 
+            document.getElementById('popupContent').innerHTML = html; 
+            document.getElementById('popup-window').style.display = 'block'; 
+        }
+        function closePopup() { document.getElementById('popup-window').style.display = 'none'; }
+
+        function showError(text) {
+            document.getElementById('errorText').innerText = text;
+            document.getElementById('error-popup').style.display = 'block';
+            setTimeout(closeError, 4000);
+        }
+        function closeError() { document.getElementById('error-popup').style.display = 'none'; }
 
         function setView(id, b) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -489,32 +524,40 @@
             document.getElementById('sideIcon').className = p.classList.contains('collapsed') ? "fas fa-chevron-right" : "fas fa-chevron-left";
         }
 
-        // --- БАЗА ДАННЫХ ---
+        // --- ЛОГИКА БАЗЫ ---
         db.ref('lots').on('value', s => { data = s.val() ? Object.entries(s.val()) : []; renderAll(); });
         db.ref('bans').on('value', s => {
             const list = document.getElementById('banList'), bans = s.val() || {};
             list.innerHTML = '';
             Object.entries(bans).forEach(([uid, name]) => {
-                list.innerHTML += `<div class="ban-item"><span><b>${name}</b> (ID: ${uid})</span><button class="unban-btn" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button></div>`;
+                list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#161616; padding:12px; margin-bottom:6px; border-radius:8px; border-left:3px solid var(--red);">
+                    <span><b>${name}</b> (ID: ${uid})</span>
+                    <button style="background:var(--red); color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:11px;" onclick="db.ref('bans/${uid}').remove()">РАЗБАНИТЬ</button>
+                </div>`;
             });
         });
         db.ref('presence').on('value', s => { onlineUsers = s.val() || {}; document.getElementById('onlineCount').innerText = Object.keys(onlineUsers).length; });
         db.ref('auction/rules').once('value', s => { if(s.val()) document.getElementById('rulesArea').innerText = s.val(); });
 
         function showOnlineList() {
-            const names = Object.values(onlineUsers).map(u => `<div class="popup-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
+            const names = Object.values(onlineUsers).map(u => `<div class="pop-row"><span>${u.name || 'Аноним'}</span></div>`).join('');
             openPopup("СЕЙЧАС ОНЛАЙН", names || "Никого нет в сети");
         }
 
+        // БАН С ПРОВЕРКОЙ АДМИНА
         function askBan(uid, name) {
-            if(uid === 'admin' || name === 'Admin') return openPopup("ОШИБКА", "<span style='color:var(--red)'>АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!</span>");
-            showModal("БАН ПОЛЬЗОВАТЕЛЯ", `Вы точно хотите забанить ${name}? Он больше не сможет зайти на аукцион.`, () => { db.ref('bans/' + uid).set(name); });
+            if(uid === 'admin' || name === 'Admin' || uid === 'undefined') {
+                return showError("АДМИНА НЕЛЬЗЯ ЗАБАНИТЬ!");
+            }
+            showModal("БАН ПОЛЬЗОВАТЕЛЯ", `Вы точно хотите забанить ${name}? Это заблокирует его навсегда.`, () => {
+                db.ref('bans/' + uid).set(name);
+            });
         }
 
         function showLotVoters(id, name, voters) {
             if(!voters) return openPopup("ГОЛОСОВАЛИ ЗА " + name, "Пока никто не голосовал");
             const html = Object.entries(voters).map(([uid, username]) => `
-                <div class="popup-row">
+                <div class="pop-row">
                     <span>${username}</span>
                     <i class="fas fa-user-slash mini-ban-btn" onclick="askBan('${uid}', '${username}')"></i>
                 </div>`).join('');
@@ -546,7 +589,7 @@
                         <span style="flex:1; font-weight:bold;">${d.name}</span>
                         <span style="color:var(--accent); font-weight:bold; margin-right:15px;">${p}%</span>
                         <span style="margin-right:15px; cursor:pointer;" onclick='showLotVoters("${id}", "${d.name}", ${JSON.stringify(d.voters || null)})'>
-                            ${votes} <div class="vote-avatar-box"><i class="fas fa-user"></i></div>
+                            ${votes} <div class="user-avatar-small"><i class="fas fa-user"></i></div>
                         </span>
                         <i class="fas fa-user-times" title="Бан" style="cursor:pointer; color:var(--red); margin-right:10px;" onclick="askBan('${d.uid || d.authorId}', '${d.author}')"></i>
                         <i class="fas fa-trash" style="cursor:pointer; color:#444;" onclick="safeDeleteLot('${id}')"></i>
@@ -558,7 +601,7 @@
         }
 
         function safeDeleteLot(id) {
-            showModal("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса вернутся пользователям, и они смогут переголосовать.", () => {
+            showModal("УДАЛЕНИЕ ЛОТА", "Удалить этот лот? Голоса вернутся пользователям.", () => {
                 db.ref('users').once('value', snap => {
                     snap.forEach(u => { if(u.val().votedFor === id) db.ref('users/' + u.key).update({ voted: false, votedFor: null }); });
                     db.ref('lots/' + id).remove();
@@ -566,27 +609,32 @@
             });
         }
 
-        // --- ТАЙМЕР НА 3+ ДНЯ ---
+        // --- ТАЙМЕР (ИСПРАВЛЕН ДЛЯ 3+ ДНЕЙ) ---
         function applyTimer() {
             const d = parseInt(document.getElementById('tDays').value) || 0;
             const h = parseInt(document.getElementById('tHours').value) || 0;
             const m = parseInt(document.getElementById('tMins').value) || 0;
-            tSec = (d * 86400) + (h * 3600) + (m * 60); tUpdate();
+            tSec = (d * 86400) + (h * 3600) + (m * 60); 
+            tUpdate();
         }
         function tUpdate() { 
-            const d = Math.floor(tSec / 86400), h = Math.floor((tSec % 86400) / 3600), m = Math.floor((tSec % 3600) / 60), s = tSec % 60;
+            const d = Math.floor(tSec / 86400);
+            const h = Math.floor((tSec % 86400) / 3600);
+            const m = Math.floor((tSec % 3600) / 60);
+            const s = tSec % 60;
             document.getElementById('tDisp').innerText = `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
             db.ref('auction').update({ timer: tSec, pass: PASS });
             db.ref('auction/votingClosed').set(tSec <= 0 && document.getElementById('lockVoting').checked);
         }
         function tToggle() { 
-            const b=document.getElementById('tPlay'); if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
+            const b=document.getElementById('tPlay'); 
+            if(tInt){clearInterval(tInt); tInt=null; b.className="fas fa-play";} 
             else{tInt=setInterval(()=>{if(tSec>0){tSec--; tUpdate();} else { clearInterval(tInt); tInt=null; b.className="fas fa-play"; }},1000); b.className="fas fa-pause";} 
         }
         function tMod(v) { tSec=Math.max(0, tSec+v); tUpdate(); }
         function tReset() { tSec=600; tUpdate(); }
 
-        // --- ЛОГИКА КОЛЕСА ---
+        // --- ЛОГИКА КОЛЕСА (ЭЛИТНАЯ КЛАССИКА) ---
         function setWType(t) { 
             wType = t; 
             document.getElementById('tNew').classList.toggle('active', t==='new');
@@ -604,7 +652,7 @@
             let curr = rotation;
             active.forEach(([id, d], i) => {
                 const votes = d.votes || d.val || 0;
-                // КЛАССИКА = ПО ВЕСУ (КАК ДОНАТ), НОВОЕ = ВСЕМ ПОРОВНУ
+                // КЛАССИКА: РАЗМЕР ЗАВИСИТ ОТ ЛЮДЕЙ, НОВОЕ: ПОРОВНУ
                 const slice = wType === 'class' ? (votes/total) * (Math.PI*2) : (Math.PI*2) / active.length;
                 ctx.save(); ctx.translate(275,275); ctx.rotate(curr);
                 ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,260,0,slice);
@@ -653,7 +701,13 @@
             document.getElementById('aName').value = '';
         }
 
-        function askClearDB() { showModal("СБРОС БАЗЫ", "Вы уверены? Это полностью удалит все лоты и правила. Действие нельзя отменить.", () => { db.ref('lots').remove(); db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); }); }
+        function askClearDB() { 
+            showModal("СБРОС БАЗЫ", "ВНИМАНИЕ! Это действие полностью удалит все лоты и обнулит правила. Вы уверены?", () => { 
+                db.ref('lots').remove(); 
+                db.ref('auction').update({ timer: 600, pass: PASS, rules: "" }); 
+            }); 
+        }
+        
         function updateLock() { db.ref('auction/lockSettings').set(document.getElementById('lockVoting').checked); }
         function up(i, t) { if(i.files[0]){ const r=new FileReader(); r.onload=e=>{ if(t==='bg')document.getElementById('mainBody').style.backgroundImage=`url(${e.target.result})`; else{document.getElementById('logoImg').src=e.target.result; document.getElementById('logoBox').style.display='flex';} }; r.readAsDataURL(i.files[0]); }}
 
