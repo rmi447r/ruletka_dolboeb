@@ -1041,7 +1041,7 @@
 
         function updateStatus(name, isFinal) {
             const st = document.getElementById('simpleStatus'); st.style.color = isFinal ? "var(--accent)" : "var(--red)";
-            st.innerText = isFinal ? "🏆 ПОБЕДИТЕЛЬ: " + name : "❌ ВЫБЫЛ: " + name;
+            st.innerText = isFinal ? ": " + name : ": " + name;
             setTimeout(function() { st.innerText = ''; }, 6000);
         }
 
