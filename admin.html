@@ -1039,11 +1039,9 @@
             }
         }
 
-        function updateStatus(name, isFinal) {
-            const st = document.getElementById('simpleStatus'); st.style.color = isFinal ? "var(--accent)" : "var(--red)";
-            st.innerText = isFinal ? ": " + name : ": " + name;
-            setTimeout(function() { st.innerText = ''; }, 6000);
-        }
+       function updateStatus(name, isFinal) {
+    // Здесь пусто, чтобы не было лишних надписей
+}
 
         /* ============================================================
            ФУНКЦИИ ВВОДА И ОБЩИЕ ДЕЙСТВИЯ
